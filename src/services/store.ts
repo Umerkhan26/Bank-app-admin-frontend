@@ -25,19 +25,29 @@ export const createStoreData = async (storeData: any) => {
   }
 };
 
+// export const getStoresData = async () => {
+//   const token = localStorage.getItem("token");
+
+//   if (!token) {
+//     throw new Error("Authorization token is missing");
+//   }
+
+//   try {
+//     const response = await axios.get("http://localhost:3000/api/getStore", {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching stores:", error);
+//     throw error;
+//   }
+// };
+
 export const getStoresData = async () => {
-  const token = localStorage.getItem("token");
-
-  if (!token) {
-    throw new Error("Authorization token is missing");
-  }
-
   try {
-    const response = await axios.get("http://localhost:3000/api/getStore", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.get("http://localhost:3000/api/getStore");
     return response.data;
   } catch (error) {
     console.error("Error fetching stores:", error);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
+import Select from "react-select";
 
 import {
   Container,
@@ -17,15 +18,16 @@ import {
   TableRow,
   TableData,
 } from "../users/User.Styles";
-import { getStoresData, createStoreData } from "../../services/store";
+import { getStoresData } from "../../services/store";
 // import Loader from "../../components/Loader/Loader";
-import { promotions, Stores } from "../../type";
+import { Promotions } from "../../type";
 import {
   createPromotionData,
   deletePromotionData,
   getPromotionsData,
   updatePromotionData,
 } from "../../services/promotion";
+import { ClipLoader } from "react-spinners";
 
 type FormData = {
   title: string;
@@ -40,10 +42,9 @@ type FormData = {
 };
 
 const Promotion: React.FC = () => {
-  const [promotion, setpromotions] = useState<promotions[]>([]);
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false); // Track dropdown visibility
+  const [promotion, setpromotions] = useState<Promotions[]>([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<null | Error>(null);
   const [editingStatusUserId, setEditingStatusUserId] = useState<string | null>(
     null
@@ -71,19 +72,17 @@ const Promotion: React.FC = () => {
     const fetchStores = async () => {
       try {
         const response = await getStoresData();
-        console.log("Fetched stores:", response); // Check the response structure
+        console.log("Fetched stores:", response);
 
-        // Ensure the stores array is inside the response object
         if (Array.isArray(response.stores)) {
           const extractedStores = response.stores.map((store) => ({
-            _id: store._id, // Store ID
-            storeName: store.storeName, // Store Name
+            _id: store._id,
+            storeName: store.storeName,
           }));
 
-          // Log the extracted stores to make sure the data is correctly processed
           console.log("Extracted stores:", extractedStores);
 
-          setStores(extractedStores); // Set stores to state
+          setStores(extractedStores);
         } else {
           console.error("Store data is not an array", response);
         }
@@ -95,26 +94,22 @@ const Promotion: React.FC = () => {
     fetchStores();
   }, []);
 
-  useEffect(() => {
-    const fetchPromotions = async () => {
-      try {
-        const data = await getPromotionsData();
-        console.log("Fetched Promotions:", data.promotions);
-        setpromotions(data.promotions); // Assuming the API response has a `promotions` array
-      } catch (error) {
-        console.error("Error fetching promotions:", error);
-        toast.error("Error fetching promotions. Please try again later.");
-      }
-    };
+  const fetchPromotions = async () => {
+    try {
+      const data = await getPromotionsData();
+      console.log("Fetched Promotions:", data.promotions);
+      setpromotions(data.promotions);
+    } catch (error) {
+      console.error("Error fetching promotions:", error);
+      toast.error("Error fetching promotions. Please try again later.");
+    }
+  };
 
+  useEffect(() => {
     fetchPromotions();
   }, []);
 
   if (error) return <div>Error loading users: {error.message}</div>;
-
-  const toggleStatusButtons = (userId: string) => {
-    setEditingStatusUserId(userId);
-  };
 
   const handleStatusOptionChange = async (userId: string, status: string) => {
     const newStatus = status === "Active";
@@ -137,28 +132,10 @@ const Promotion: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = async (user: promotions) => {
-    // console.log(`Deleting user: ${user.name}`);
-
-    try {
-      const deletedUser = await deleteUser(user._id);
-
-      setpromotions((prevUsers) =>
-        prevUsers.filter((existingUser) => existingUser._id !== deletedUser._id)
-      );
-
-      console.log("User deleted successfully", deletedUser);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      setError(new Error("Failed to delete user"));
-    }
-  };
-
   const handleDeletepromotion = async (promotion: { _id: string }) => {
     try {
       const promotionId = promotion._id;
 
-      console.log("Deleting promotion with ID:", promotionId);
       const deletedpromotion = await deletePromotionData(promotionId);
       console.log("Deleted promotion:", deletedpromotion);
       toast.success("promotion deleted successfully!");
@@ -173,35 +150,6 @@ const Promotion: React.FC = () => {
     }
   };
 
-  const handleStoreChangee = (e) => {
-    const { options } = e.target;
-
-    // Ensure stores is an array before processing
-    if (!Array.isArray(stores)) {
-      console.error("Stores are not available");
-      return;
-    }
-
-    // Initialize the selectedStores array with the current formData.store value
-    let selectedStores = formData.store || [];
-
-    // Loop through selected options and store their values
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) {
-        // Add the selected store ID to the selectedStores array (only if it's not already added)
-        if (!selectedStores.includes(options[i].value)) {
-          selectedStores.push(options[i].value);
-        }
-      } else {
-        // Remove the deselected store ID from the selectedStores array
-        selectedStores = selectedStores.filter((id) => id !== options[i].value);
-      }
-    }
-
-    // Update formData.store with the newly selected stores
-    handleChange({ target: { name: "store", value: selectedStores } });
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -210,24 +158,6 @@ const Promotion: React.FC = () => {
     }));
   };
 
-  // const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const { name, value } = e.target;
-
-  //   // Handle multiple selection for store
-  //   if (name === "store") {
-  //     const selectedStores = Array.from(
-  //       e.target.selectedOptions,
-  //       (option) => option.value
-  //     );
-  //     setFormData({
-  //       ...formData,
-  //       [name]: selectedStores, // Update the selected store IDs
-  //     });
-  //   }
-  // };
-  const toggleDropdown = () => {
-    setIsDropdownVisible(!isDropdownVisible); // Toggle visibility of dropdown
-  };
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -236,7 +166,7 @@ const Promotion: React.FC = () => {
         setFormData((prevFormData) => ({
           ...prevFormData,
           image: file, // Store the file
-          imagePreview: URL.createObjectURL(file), // Create a preview URL
+          imagePreview: URL.createObjectURL(file),
         }));
       } else {
         alert("Please upload a valid image file.");
@@ -251,88 +181,9 @@ const Promotion: React.FC = () => {
   const handleShowModal = () => {
     setShowModal(true);
   };
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   const startDate = formData.start_date
-  //     ? new Date(formData.start_date)
-  //     : new Date();
-  //   const endDate = formData.end_date
-  //     ? new Date(formData.end_date)
-  //     : new Date();
-
-  //   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-  //     console.error(
-  //       "Invalid date values:",
-  //       formData.start_date,
-  //       formData.end_date
-  //     );
-  //     return;
-  //   }
-
-  //   const pointsRequired =
-  //     formData.pointsRequired && !isNaN(Number(formData.pointsRequired))
-  //       ? formData.pointsRequired
-  //       : "0";
-
-  //   const formDataToSend = new FormData();
-  //   formDataToSend.append("title", formData.title);
-  //   formDataToSend.append("description", formData.description);
-  //   formDataToSend.append("start_date", startDate.toISOString());
-  //   formDataToSend.append("end_date", endDate.toISOString());
-  //   formDataToSend.append("points_required", pointsRequired.toString());
-
-  //   // Handle the `stores` field
-  //   if (Array.isArray(formData.store)) {
-  //     // If `stores` is an array, join it into a comma-separated string
-  //     formDataToSend.append("stores", formData.store.join(","));
-  //   } else if (typeof formData.store === "string") {
-  //     // If `stores` is a string (comma-separated), just pass it directly
-  //     formDataToSend.append("stores", formData.store);
-  //   } else {
-  //     // Default to an empty string or handle the error as necessary
-  //     formDataToSend.append("stores", "");
-  //   }
-
-  //   if (formData.image) {
-  //     formDataToSend.append("image", formData.image);
-  //   }
-
-  //   try {
-  //     const promotionResponse = await createPromotionData(formDataToSend);
-  //     console.log("Create api response", promotionResponse);
-
-  //     toast.success("Promotion created successfully!");
-  //     setpromotions((prevPromotions) => [
-  //       ...prevPromotions,
-  //       {
-  //         ...promotionResponse,
-  //         id: promotionResponse.id || Math.random().toString(36).substr(2, 9),
-  //       },
-  //     ]);
-
-  //     // Reset form data
-  //     setFormData({
-  //       title: "",
-  //       description: "",
-  //       start_date: "",
-  //       end_date: "",
-  //       pointsRequired: "",
-  //       image: null,
-  //       stores: [],
-  //     });
-
-  //     // Close modal
-  //     setIsEditing(false);
-  //     handleCloseModal();
-  //   } catch (error) {
-  //     console.error("Error creating promotion:", error);
-  //     toast.error("Error creating the promotion. Please try again.");
-  //   }
-  // };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
     const startDate = formData.start_date
       ? new Date(formData.start_date)
@@ -384,7 +235,7 @@ const Promotion: React.FC = () => {
           formDataToSend,
           promotionId
         );
-        console.log("Updated Promotion Response:", promotionResponse);
+        console.log("UpdatedDDDDD Promotion Response:", promotionResponse);
         toast.success("Promotion updated successfully!");
       } else {
         // Create new promotion if `isEditing` is false
@@ -393,25 +244,33 @@ const Promotion: React.FC = () => {
         toast.success("Promotion created successfully!");
       }
 
-      // Update the state with the response
       setpromotions((prevPromotions) => {
         if (isEditing && promotionId) {
           return prevPromotions.map((promotion) =>
-            promotion.id === promotionId
-              ? { ...promotionResponse, id: promotionId }
+            promotion._id === promotionId
+              ? { ...promotionResponse.promotion, id: promotionId }
               : promotion
           );
         } else {
           return [
             ...prevPromotions,
             {
-              ...promotionResponse,
+              ...promotionResponse.promotion,
               id:
-                promotionResponse.id || Math.random().toString(36).substr(2, 9),
+                promotionResponse.promotion._id ||
+                Math.random().toString(36).substr(2, 9),
             },
           ];
         }
       });
+
+      // Refetch campaigns for consistency
+      const updatedPromotions = await getPromotionsData();
+      console.log("Updated promotions data:", updatedPromotions);
+      setpromotions(updatedPromotions);
+
+      // Fetch updated promotions list
+      await fetchPromotions();
 
       // Reset form data
       setFormData({
@@ -431,6 +290,7 @@ const Promotion: React.FC = () => {
       console.error("Error submitting promotion:", error);
       toast.error("Error submitting the promotion. Please try again later.");
     }
+    setLoading(false);
   };
 
   const handleEditpromotion = (promotion) => {
@@ -492,7 +352,6 @@ const Promotion: React.FC = () => {
 
             <Modal.Body>
               <Form onSubmit={handleSubmit}>
-                {/* Title Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>Title</Form.Label>
                   <Form.Control
@@ -504,7 +363,6 @@ const Promotion: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* Description Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>Description</Form.Label>
                   <Form.Control
@@ -517,18 +375,16 @@ const Promotion: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* Start Date Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>Start Date</Form.Label>
                   <Form.Control
                     type="date"
-                    name="start_date" // Ensure it matches backend key
+                    name="start_date"
                     value={formData.start_date}
                     onChange={handleChange}
                   />
                 </Form.Group>
 
-                {/* End Date Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>End Date</Form.Label>
                   <Form.Control
@@ -539,73 +395,39 @@ const Promotion: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* <Form.Group className="mb-3">
-                  <Form.Label>Stores</Form.Label>
-                  <Form.Select
-                    name="store"
-                    value={formData.store}
-                    onChange={handleChange}
-                    aria-label="Select Stores"
-                    multiple
-                  >
-                    <option value="">Select stores</option>
-                    {stores.length > 0 ? (
-                      stores.map((store) => (
-                        <option key={store._id} value={store._id}>
-                          {store.storeName}
-                        </option>
-                      ))
-                    ) : (
-                      <option>Loading stores...</option>
-                    )}
-                  </Form.Select>
-                </Form.Group> */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Stores</Form.Label>
-
-                  {/* Store Select Dropdown */}
-                  <div className="dropdown-container">
-                    <Form.Select
+                {
+                  <Form.Group className="mb-3">
+                    <Form.Label>Stores</Form.Label>
+                    <Select
                       name="store"
-                      value={formData.store || []} // Ensure formData.store is always an array
-                      onChange={handleStoreChangee} // Use handleStoreChange to update multiple stores
-                      aria-label="Select Stores"
-                      multiple
-                      onClick={toggleDropdown} // Toggle dropdown visibility on click
-                      className="form-select-sm" // Small size for the select field
-                    >
-                      <option value="">Select stores</option>
-
-                      {/* Conditionally render store options when dropdown is visible */}
-                      {isDropdownVisible && stores && stores.length > 0
-                        ? stores.map((store) => (
-                            <option key={store._id} value={store._id}>
-                              {store.storeName}
-                            </option>
-                          ))
-                        : null}
-                    </Form.Select>
-                  </div>
-
-                  {/* Display selected store names directly in the input field */}
-                  <Form.Control
-                    type="text"
-                    value={
-                      Array.isArray(formData.store)
-                        ? formData.store
-                            .map(
-                              (id) =>
-                                stores.find((store) => store._id === id)
-                                  ?.storeName ?? ""
-                            )
-                            .join(", ") // Join selected store names with a comma
-                        : ""
-                    }
-                    readOnly
-                    className="mt-2"
-                    aria-label="Selected Stores"
-                  />
-                </Form.Group>
+                      isMulti
+                      options={stores.map((store) => ({
+                        value: store._id,
+                        label: store.storeName,
+                      }))}
+                      value={
+                        Array.isArray(formData.store)
+                          ? formData.store.map((storeId) => ({
+                              value: storeId,
+                              label:
+                                stores.find((store) => store._id === storeId)
+                                  ?.storeName || "",
+                            }))
+                          : []
+                      }
+                      onChange={(selectedOptions) => {
+                        const selectedStores = selectedOptions.map(
+                          (option) => option.value
+                        );
+                        setFormData({
+                          ...formData,
+                          store: selectedStores,
+                        });
+                      }}
+                      placeholder="Select stores"
+                    />
+                  </Form.Group>
+                }
 
                 <Form.Group className="mb-3">
                   <Form.Label>Point</Form.Label>
@@ -618,16 +440,14 @@ const Promotion: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* Image Upload */}
                 <Form.Group className="mb-3">
                   <Form.Label>promotion Image</Form.Label>
                   <Form.Control
                     type="file"
                     name="image"
                     onChange={handleFileChange}
-                    accept="image/*" // Ensure only images can be uploaded
+                    accept="image/*"
                   />
-                  {/* Show Image Preview if it's available */}
                   {formData.imagePreview && (
                     <div style={{ marginTop: "10px" }}>
                       <img
@@ -643,9 +463,14 @@ const Promotion: React.FC = () => {
                   )}
                 </Form.Group>
 
-                {/* Submit Button */}
                 <AddUserButton variant="primary" type="submit">
-                  {isEditing ? "Update promotion" : "Save promotion"}
+                  {loading ? (
+                    <ClipLoader color="#fff" size={20} loading={loading} />
+                  ) : isEditing ? (
+                    "Update Promotion"
+                  ) : (
+                    "Save Promotion"
+                  )}
                 </AddUserButton>
               </Form>
             </Modal.Body>
@@ -661,7 +486,7 @@ const Promotion: React.FC = () => {
             <TableHeader>Description</TableHeader>
             <TableHeader>Start Date</TableHeader>
             <TableHeader>End Date</TableHeader>
-            <TableHeader>Store</TableHeader> {/* New Store Column */}
+            <TableHeader>Store</TableHeader>
             <TableHeader>Image</TableHeader>
             <TableHeader>Action</TableHeader>
           </tr>

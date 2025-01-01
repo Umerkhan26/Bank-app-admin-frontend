@@ -16,7 +16,6 @@ import {
   TableRow,
   TableData,
 } from "../users/User.Styles";
-import { deleteCampaignData } from "../../services/campaign";
 // import Loader from "../../components/Loader/Loader";
 import { Stores } from "../../type";
 import {
@@ -82,54 +81,6 @@ const Store: React.FC = () => {
     setShowModal(true);
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-
-  //   // Ensure required fields are present
-  //   const { storeName, description, longitude, latitude } = formData;
-  //   if (!storeName || !description || !longitude || !latitude) {
-  //     toast.error("All fields are required!");
-  //     return;
-  //   }
-
-  //   const storeData = {
-  //     storeName,
-  //     description,
-  //     longitude,
-  //     latitude,
-  //   };
-
-  //   try {
-  //     if (isEditing && storeId) {
-  //       // Add editing logic if required
-  //     } else {
-  //       // Create new store
-  //       const newStore = await createStoreData(storeData);
-  //       console.log("Created Store Response:", newStore);
-  //       toast.success("Store created successfully!");
-
-  //       // Update store list
-  //       setStores((prevStores) => [
-  //         ...prevStores,
-  //         { ...newStore, id: newStore.store._id }, // Adjust key names if necessary
-  //       ]);
-  //     }
-
-  //     // Reset form and close modal
-  //     setFormData({
-  //       storeName: "",
-  //       description: "",
-  //       longitude: null,
-  //       latitude: null,
-  //     });
-  //     setIsEditing(false);
-  //     handleCloseModal();
-  //   } catch (error) {
-  //     console.error("Error creating store:", error);
-  //     toast.error("Error creating the store. Please try again later.");
-  //   }
-  // };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -153,24 +104,21 @@ const Store: React.FC = () => {
     try {
       let storeResponse;
 
-      // If editing an existing store, call the update API
       if (isEditing && storeId) {
-        storeResponse = await updateStoreData(storeData, storeId); // Update API function
+        storeResponse = await updateStoreData(storeData, storeId);
         console.log("Updated Store Response:", storeResponse);
         toast.success("Store updated successfully!");
       } else {
-        // Otherwise, create a new store (if needed)
-        storeResponse = await createStoreData(storeData); // Create API function
+        storeResponse = await createStoreData(storeData);
         console.log("Created Store Response:", storeResponse);
         toast.success("Store created successfully!");
       }
 
-      // Update the store list in state based on the action
       setStores((prevStores) => {
         if (isEditing && storeId) {
           return prevStores.map((store) =>
             store._id === storeId
-              ? { ...storeResponse.store, id: storeId } // Update the specific store
+              ? { ...storeResponse.store, id: storeId }
               : store
           );
         } else {
@@ -235,7 +183,7 @@ const Store: React.FC = () => {
       longitude: store.longitude,
       latitude: store.latitude,
     });
-    setStoreId(store._id); // Save the store ID for the PUT request
+    setStoreId(store._id);
     setIsEditing(true);
     setShowModal(true);
   };

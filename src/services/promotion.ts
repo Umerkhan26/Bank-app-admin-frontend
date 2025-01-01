@@ -60,7 +60,7 @@ export const updatePromotionData = async (
 
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/updatePromotion/${promotionId}`, // Make sure `campaignId` is part of the URL
+      `http://localhost:3000/api/updatePromotion/${promotionId}`,
       formData,
       {
         headers: {
@@ -69,6 +69,7 @@ export const updatePromotionData = async (
         },
       }
     );
+    console.log("API response for update:", response);
     return response.data;
   } catch (error) {
     console.error("Error updating campaign:", error);

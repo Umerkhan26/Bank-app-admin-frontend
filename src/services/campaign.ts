@@ -63,8 +63,8 @@ export const fetchCampaignsData = () => {
 export interface CampaignData {
   title: string;
   description: string;
-  startDate: Date; // Change from string to Date
-  endDate: Date; // Change from string to Date
+  startDate: Date;
+  endDate: Date;
   pointsRequired: number;
   status: string;
   image: string | null;
@@ -89,7 +89,7 @@ export const createCampaignData = async (formData: FormData) => {
       {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data", // Ensure that the request has the correct Content-Type
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -113,7 +113,7 @@ export const CampaignsData = async () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data.campaigns; // Assuming response contains a 'campaigns' array
+    return response.data.campaigns;
   } catch (error) {
     console.error("Error fetching campaigns:", error);
     throw error;

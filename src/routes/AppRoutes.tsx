@@ -5,6 +5,7 @@ import Campaigns from "../components/Campaign/Campaign";
 import Login from "../pages/Login/login";
 import Promotion from "../components/Promotion/Promotion";
 import Store from "../components/Store/Store";
+import Qrcode from "../components/QrCode/Qrcode";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const AppRoutes: React.FC = () => {
         <Route path="campaigns" element={<Campaigns />} />
         <Route path="stores" element={<Store />} />
         <Route path="promotions" element={<Promotion />} />
+        <Route path="qrcodes" element={<Qrcode />} />
       </Route>
     </Routes>
   );

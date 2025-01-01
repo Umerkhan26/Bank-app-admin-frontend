@@ -1,9 +1,9 @@
 import React from "react";
-import { deleteUser, updateUserStatus } from "../../services/user";
 import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
+import { ClipLoader } from "react-spinners";
 
 import {
   Container,
@@ -40,14 +40,13 @@ type FormData = {
 const Campaign: React.FC = () => {
   const [campaign, setCampaigns] = useState<Campaigns[]>([]);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<null | Error>(null);
   const [editingStatusUserId, setEditingStatusUserId] = useState<string | null>(
     null
   );
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [campaignId, setCampaignId] = useState<string | null>(null);
-
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     title: "",
@@ -63,12 +62,11 @@ const Campaign: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const campaignsData = await CampaignsData(); // Fetch campaigns
+        const campaignsData = await CampaignsData();
         console.log("Campaigns Data:", campaignsData);
-        setCampaigns(campaignsData); // Update state with fetched data
+        setCampaigns(campaignsData);
       } catch (error) {
         console.error("Error fetching campaigns:", error);
-        // Optionally handle errors (e.g., show a notification or message)
       }
     };
 
@@ -102,23 +100,6 @@ const Campaign: React.FC = () => {
     }
   };
 
-  const handleDeleteUser = async (user: Campaigns) => {
-    // console.log(`Deleting user: ${user.name}`);
-
-    try {
-      const deletedUser = await deleteUser(user._id);
-
-      setCampaigns((prevUsers) =>
-        prevUsers.filter((existingUser) => existingUser._id !== deletedUser._id)
-      );
-
-      console.log("User deleted successfully", deletedUser);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      setError(new Error("Failed to delete user"));
-    }
-  };
-
   const handleDeleteCampaign = async (campaign: { _id: string }) => {
     try {
       const campaignId = campaign._id;
@@ -131,8 +112,6 @@ const Campaign: React.FC = () => {
       setCampaigns((prevCampaigns) =>
         prevCampaigns.filter((campaign) => campaign._id !== campaignId)
       );
-
-      // Optionally, show a success message or confirmatio
     } catch (error) {
       console.error("Error deleting campaign:", error);
     }
@@ -153,8 +132,8 @@ const Campaign: React.FC = () => {
       if (file.type.startsWith("image/")) {
         setFormData((prevFormData) => ({
           ...prevFormData,
-          image: file, // Store the file
-          imagePreview: URL.createObjectURL(file), // Create a preview URL
+          image: file,
+          imagePreview: URL.createObjectURL(file),
         }));
       } else {
         alert("Please upload a valid image file.");
@@ -169,80 +148,6 @@ const Campaign: React.FC = () => {
   const handleShowModal = () => {
     setShowModal(true);
   };
-
-  //   const handleSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-
-  //     console.log("Form Data on submit:", formData);
-
-  //     const startDate = formData.start_date
-  //       ? new Date(formData.start_date)
-  //       : new Date();
-  //     const endDate = formData.end_date
-  //       ? new Date(formData.end_date)
-  //       : new Date();
-
-  //     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-  //       console.error(
-  //         "Invalid date values:",
-  //         formData.start_date,
-  //         formData.end_date
-  //       );
-  //       return;
-  //     }
-
-  //     const pointsRequired =
-  //       formData.pointsRequired && !isNaN(Number(formData.pointsRequired))
-  //         ? formData.pointsRequired
-  //         : "";
-  //     const status = formData.status === "Active";
-
-  //     const formDataToSend = new FormData();
-  //     formDataToSend.append("title", formData.title);
-  //     formDataToSend.append("description", formData.description);
-  //     formDataToSend.append("start_date", startDate.toISOString());
-  //     formDataToSend.append("end_date", endDate.toISOString());
-  //     formDataToSend.append("points_required", pointsRequired.toString());
-  //     formDataToSend.append("active", status.toString());
-
-  //     if (formData.image) {
-  //       formDataToSend.append("image", formData.image);
-  //     }
-
-  //     try {
-  //       const createdCampaign = await createCampaignData(formDataToSend);
-  //       console.log("Created Campaign Response:", createdCampaign);
-
-  //       // Optimistic Update
-  //       setCampaigns((prevCampaigns) => [
-  //         ...prevCampaigns,
-  //         {
-  //           ...createdCampaign,
-  //           id: createdCampaign.id || Math.random().toString(36).substr(2, 9),
-  //         },
-  //       ]);
-
-  //       // Refetch campaigns for consistency
-  //       const updatedCampaigns = await CampaignsData();
-  //       setCampaigns(updatedCampaigns);
-
-  //       setFormData({
-  //         title: "",
-  //         description: "",
-  //         start_date: "",
-  //         end_date: "",
-  //         pointsRequired: "",
-  //         image: null,
-  //         imagePreview: null,
-  //         status: "",
-  //       });
-
-  //       handleCloseModal();
-  //     } catch (error) {
-  //       console.error("Error submitting campaign:", error);
-  //       alert("Error submitting the campaign. Please try again later.");
-  //     }
-  //   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,7 +173,7 @@ const Campaign: React.FC = () => {
     const pointsRequired =
       formData.pointsRequired && !isNaN(Number(formData.pointsRequired))
         ? formData.pointsRequired
-        : "0"; // Default value or handle accordingly (e.g., empty string or null)
+        : "0";
 
     const status = formData.status === "Active";
 
@@ -320,7 +225,6 @@ const Campaign: React.FC = () => {
       const updatedCampaigns = await CampaignsData();
       setCampaigns(updatedCampaigns);
 
-      // Reset form data
       setFormData({
         title: "",
         description: "",
@@ -332,13 +236,13 @@ const Campaign: React.FC = () => {
         status: "",
       });
 
-      // Close modal
       setIsEditing(false);
       handleCloseModal();
     } catch (error) {
       console.error("Error submitting campaign:", error);
       toast.error("Error submitting the campaign. Please try again later.");
     }
+    setLoading(false);
   };
 
   const handleEditCampaign = (campaign) => {
@@ -410,7 +314,6 @@ const Campaign: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* Description Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>Description</Form.Label>
                   <Form.Control
@@ -423,18 +326,16 @@ const Campaign: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* Start Date Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>Start Date</Form.Label>
                   <Form.Control
                     type="date"
-                    name="start_date" // Ensure it matches backend key
+                    name="start_date"
                     value={formData.start_date}
                     onChange={handleChange}
                   />
                 </Form.Group>
 
-                {/* End Date Input */}
                 <Form.Group className="mb-3">
                   <Form.Label>End Date</Form.Label>
                   <Form.Control
@@ -463,9 +364,8 @@ const Campaign: React.FC = () => {
                     type="file"
                     name="image"
                     onChange={handleFileChange}
-                    accept="image/*" // Ensure only images can be uploaded
+                    accept="image/*"
                   />
-                  {/* Show Image Preview if it's available */}
                   {formData.imagePreview && (
                     <div style={{ marginTop: "10px" }}>
                       <img
@@ -481,9 +381,14 @@ const Campaign: React.FC = () => {
                   )}
                 </Form.Group>
 
-                {/* Submit Button */}
                 <AddUserButton variant="primary" type="submit">
-                  {isEditing ? "Update Campaign" : "Save Campaign"}
+                  {loading ? (
+                    <ClipLoader color="#fff" size={20} loading={loading} />
+                  ) : isEditing ? (
+                    "Update Campaign"
+                  ) : (
+                    "Save Campaign"
+                  )}
                 </AddUserButton>
               </Form>
             </Modal.Body>
@@ -633,98 +538,3 @@ const Campaign: React.FC = () => {
 };
 
 export default Campaign;
-
-{
-  /* <Modal show={showModal} onHide={handleCloseModal}>
-            <Modal.Header closeButton>
-              <Modal.Title style={{ color: "#1a8797" }}>
-                Add New Campaign
-              </Modal.Title>
-            </Modal.Header>
-
-            <Modal.Body>
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Title</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="Enter campaign title"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Description</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Enter campaign description"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Start Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="start_date"
-                    value={formData.start_date}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>End Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="end_date" 
-                    value={formData.end_date}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Point</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="pointsRequired" 
-                    value={formData.pointsRequired}
-                    onChange={handleChange}
-                    placeholder="Enter campaign point"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Campaign Image</Form.Label>
-                  <Form.Control
-                    type="file"
-                    name="image"
-                    onChange={handleFileChange}
-                    accept="image/*" 
-                  />
-                  {formData.imagePreview && (
-                    <div style={{ marginTop: "10px" }}>
-                      <img
-                        src={formData.imagePreview}
-                        alt="Campaign Preview"
-                        style={{
-                          width: "100%",
-                          maxWidth: "200px",
-                          height: "auto",
-                        }}
-                      />
-                    </div>
-                  )}
-                </Form.Group>
-
-                <AddUserButton variant="primary" type="submit">
-                  Save Campaign
-                </AddUserButton>
-              </Form>
-            </Modal.Body>
-          </Modal> */
-}

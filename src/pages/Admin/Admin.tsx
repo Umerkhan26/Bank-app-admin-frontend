@@ -24,7 +24,7 @@ import {
   ProfilePic,
 } from "./Admin.styles";
 import { MdCampaign, MdOutlineArrowDropDown } from "react-icons/md";
-import { FaLocationDot } from "react-icons/fa6";
+import { FaLocationDot, FaQrcode } from "react-icons/fa6";
 import { FaUsers } from "react-icons/fa";
 import { AiOutlineDashboard } from "react-icons/ai";
 
@@ -187,6 +187,30 @@ const Admin: React.FC = () => {
                     }}
                   >
                     Promotion
+                  </span>
+                </div>
+              </SidebarLink>
+            </SidebarItem>
+
+            <SidebarItem>
+              <SidebarLink to="/qrcodes">
+                <div className="flex items-center text-lg">
+                  <FaQrcode
+                    className="mr-2 text-xl"
+                    style={{
+                      fontSize: "23px",
+                      marginBottom: "-6px",
+                      marginRight: "12px",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "17px",
+                      position: "relative",
+                      top: "5px",
+                    }}
+                  >
+                    Qrcode
                   </span>
                 </div>
               </SidebarLink>
