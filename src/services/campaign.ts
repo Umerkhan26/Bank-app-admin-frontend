@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "./brandService";
 
 export const fetchCampaignsData = () => {
   const campaigns = [
@@ -83,16 +84,12 @@ export const createCampaignData = async (formData: FormData) => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/campaigns",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    const response = await axios.post(`${API_URL}/campaigns`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating campaign:", error);
@@ -108,7 +105,7 @@ export const CampaignsData = async () => {
   }
 
   try {
-    const response = await axios.get("http://localhost:3000/api/getCampaigns", {
+    const response = await axios.get(`${API_URL}/getCampaigns`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -130,9 +127,12 @@ export const updateCampaignData = async (
     throw new Error("Authorization token is missing");
   }
 
+  console.log("Updating campaign with ID:", campaignId);
+  console.log("FormData:", Array.from(formData.entries()));
+
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/updateCampaigns/${campaignId}`, // Make sure `campaignId` is part of the URL
+      `${API_URL}/updateCampaigns/${campaignId}`,
       formData,
       {
         headers: {
@@ -155,22 +155,18 @@ export const deleteCampaignData = async (campaignId: string) => {
     throw new Error("Authorization token is missing");
   }
 
-  console.log("Deleting campaign with ID:", campaignId); // Log the campaign ID
+  console.log("Deleting campaign with ID:", campaignId);
 
-  // Validate the campaignId format (should be a 24-character hex string)
   if (!/^[0-9a-fA-F]{24}$/.test(campaignId)) {
     throw new Error("Invalid campaign ID format");
   }
 
   try {
-    const response = await axios.delete(
-      `http://localhost:3000/api/campaigns/${campaignId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await axios.delete(`${API_URL}//campaigns/${campaignId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   } catch (error) {

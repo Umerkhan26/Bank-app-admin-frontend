@@ -1,8 +1,9 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form } from "react-bootstrap";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import { ClipLoader } from "react-spinners";
+import Select from "react-select";
 
 import {
   Container,
@@ -11,307 +12,255 @@ import {
   UserCount,
   SearchInput,
   AddUserButton,
-  Table,
-  TableHeader,
-  TableRow,
-  TableData,
 } from "../users/User.Styles";
-// import Loader from "../../components/Loader/Loader";
-import { QRCode, QRCodeResponse } from "../../type";
+
+import { QRCode, QRCodeResponse, Brand } from "../../type";
 import {
   createqrcodeData,
   deleteQRCodeData,
   getqrcodeData,
   updateQRCodeData,
 } from "../../services/qrcode";
-
-type qrcodeData = {
-  _id?: string;
-  code: string;
-  points: number;
-  isUsed: boolean;
-};
+import { getAllBrands } from "../../services/brandService";
+import TableContainer from "../TabConatiner/TableConatiner";
 
 const Qrcode: React.FC = () => {
   const [qrcode, setQrCodes] = useState<QRCode[]>([]);
-
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<null | Error>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [qrcodeId, setqrcodeId] = useState<string | null>(null);
-
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState<qrcodeData>({
+
+  const [formData, setFormData] = useState<QRCode>({
     code: "",
     points: 0,
     isUsed: false,
+    brand: "",
   });
 
-  //   useEffect(() => {
-  //     const fetchqrcodes = async () => {
-  //       try {
-  //         const data = await getqrcodeData();
-  //         console.log("Full API response:", data);
-  //         if (data && data.qrCodes) {
-  //           console.log("Fetched qrcodes:", data.qrCodes);
-  //           setQrCodes(data.qrCodes);
-  //         } else {
-  //           toast.error("No QR codes available.");
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching qrcodes:", error);
-  //         toast.error("Error fetching qrcodes. Please try again later.");
-  //       }
-  //     };
-
-  //     fetchqrcodes();
-  //   }, []);
-
   useEffect(() => {
-    const fetchqrcodes = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const data = await getqrcodeData();
-        console.log("Full API response:", data);
-        if (data && data.qrCodes) {
-          console.log("Fetched qrcodes:", data.qrCodes);
-          setQrCodes(data.qrCodes);
+        const [brandData, qrCodeData] = await Promise.all([
+          getAllBrands(),
+          getqrcodeData(),
+        ]);
+
+        setBrands(brandData);
+        if (qrCodeData?.qrCodes) {
+          setQrCodes(qrCodeData.qrCodes);
         } else {
           toast.error("No QR codes available.");
         }
-      } catch (error) {
-        console.error("Error fetching qrcodes:", error);
-        toast.error("Error fetching qrcodes. Please try again later.");
+      } catch (err) {
+        setError(err as Error);
+        toast.error("Failed to load QR Codes or Brands.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchqrcodes();
+    fetchData();
   }, []);
 
-  if (error) return <div>Error loading users: {error.message}</div>;
+  if (error) return <div>Error loading data: {error.message}</div>;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
+  const handleBrandChange = (
+    selected: { value: string; label: string } | null
+  ) => {
+    setFormData((prev) => ({ ...prev, brand: selected?.value || "" }));
   };
 
-  const handleShowModal = () => {
-    setShowModal(true);
-  };
-
-  //   const handleSubmit = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-
-  //     const { code, points, isUsed, _id } = formData;
-  //     if (!code || points === undefined || isUsed === undefined) {
-  //       toast.error("All fields are required!");
-  //       return;
-  //     }
-
-  //     const pointsValue =
-  //       typeof points === "string" ? parseInt(points, 10) : points;
-
-  //     if (isNaN(pointsValue)) {
-  //       toast.error("Points must be a valid number");
-  //       return;
-  //     }
-
-  //     const qrcodeData: QRCode = {
-  //       _id: _id || Math.random().toString(36).substr(2, 9),
-  //       code,
-  //       points: pointsValue,
-  //       isUsed,
-  //     };
-
-  //     try {
-  //       let qrcodeResponse: QRCodeResponse;
-
-  //       if (isEditing && qrcodeId) {
-  //         // Update QR Code
-  //         qrcodeResponse = await updateQRCodeData(qrcodeData, qrcodeId);
-  //         toast.success("QR Code updated successfully!");
-
-  //         if (qrcodeResponse?.qrCode) {
-  //           // Update the state directly
-  //           setQrCodes((prevQrCodes) =>
-  //             prevQrCodes.map((qr) =>
-  //               qr._id === qrcodeId ? { ...qr, ...qrcodeResponse.qrCode } : qr
-  //             )
-  //           );
-  //         }
-  //       } else {
-  //         // Create new QR Code
-  //         qrcodeResponse = await createqrcodeData(qrcodeData);
-  //         toast.success("QR Code created successfully!");
-
-  //         if (qrcodeResponse?.qrCode) {
-  //           setQrCodes((prevQrCodes) => [...prevQrCodes, qrcodeResponse.qrCode]);
-  //         }
-  //       }
-
-  //       // Reset the form data
-  //       setFormData({
-  //         code: "",
-  //         points: 0,
-  //         isUsed: false,
-  //         _id: "",
-  //       });
-
-  //       setIsEditing(false);
-  //       handleCloseModal();
-  //     } catch (error) {
-  //       console.error("Error submitting QR code:", error);
-  //       toast.error("Error submitting the QR code. Please try again later.");
-  //     }
-  //   };
+  const handleCloseModal = () => setShowModal(false);
+  const handleShowModal = () => setShowModal(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    const { code, points, isUsed, _id } = formData;
-    if (!code || points === undefined || isUsed === undefined) {
-      toast.error("All fields are required!");
+    const { code, points, isUsed, brand } = formData;
+
+    if (!code || points === undefined || isUsed === undefined || !brand) {
+      toast.error("All fields are required.");
+      setLoading(false);
       return;
     }
 
-    const pointsValue =
-      typeof points === "string" ? parseInt(points, 10) : points;
-
-    if (isNaN(pointsValue)) {
-      toast.error("Points must be a valid number");
-      return;
-    }
-
-    const qrcodeData: QRCode = {
-      _id: _id || Math.random().toString(36).substr(2, 9),
+    const payload: QRCode = {
       code,
-      points: pointsValue,
+      points: typeof points === "string" ? parseInt(points) : points,
       isUsed,
+      brand,
     };
 
     try {
-      let qrcodeResponse: QRCodeResponse;
-
+      let res: QRCodeResponse;
       if (isEditing && qrcodeId) {
-        // Update QR Code
-        qrcodeResponse = await updateQRCodeData(qrcodeData, qrcodeId);
-        toast.success("QR Code updated successfully!");
-
-        if (qrcodeResponse?.qrCode) {
-          setQrCodes((prevQrCodes) =>
-            prevQrCodes.map((qr) =>
-              qr._id === qrcodeId ? { ...qr, ...qrcodeResponse.qrCode } : qr
-            )
-          );
-        }
+        res = await updateQRCodeData(payload, qrcodeId);
+        toast.success("QR Code updated!");
+        setQrCodes((prev) =>
+          prev.map((qr) => (qr._id === qrcodeId ? res.qrCode : qr))
+        );
       } else {
-        // Create new QR Code
-        qrcodeResponse = await createqrcodeData(qrcodeData);
-        toast.success("QR Code created successfully!");
-
-        if (qrcodeResponse?.qrCode) {
-          setQrCodes((prevQrCodes) => [...prevQrCodes, qrcodeResponse.qrCode]);
-        }
+        res = await createqrcodeData(payload);
+        toast.success("QR Code created!");
+        setQrCodes((prev) => [...prev, res.qrCode]);
       }
 
-      // Optional: Refetch to ensure consistency
-      const updatedData = await getqrcodeData();
-      if (updatedData?.qrCodes) {
-        setQrCodes(updatedData.qrCodes);
-      }
-
-      // Reset the form data
-      setFormData({
-        code: "",
-        points: 0,
-        isUsed: false,
-        _id: "",
-      });
-
+      setFormData({ code: "", points: 0, isUsed: false, brand: "" });
       setIsEditing(false);
       handleCloseModal();
-    } catch (error) {
-      console.error("Error submitting QR code:", error);
-      toast.error("Error submitting the QR code. Please try again later.");
+    } catch (error: any) {
+      toast.error(error.message || "Error submitting QR code.");
     }
+    setLoading(false);
   };
 
-  const handleDeleteqrcode = async (qrcode: { _id: string }) => {
-    try {
-      const qrcodeId = qrcode._id;
-      console.log("Deleting qrcode with ID:", qrcodeId);
-
-      if (!qrcodeId) {
-        console.error("qrcode ID is missing");
-        return;
-      }
-
-      const deletedqrcode = await deleteQRCodeData(qrcodeId);
-      console.log("Deleted qrcode:", deletedqrcode);
-
-      toast.success("qrcode deleted successfully!");
-
-      setQrCodes((prevqrcodes) =>
-        prevqrcodes.filter((qrcode) => qrcode._id !== qrcodeId)
-      );
-    } catch (error) {
-      console.error("Error deleting qrcode:", error);
-      toast.error("Error deleting qrcode!");
-    }
-  };
-
-  const handleEditQRCode = (qrcode) => {
+  const handleEditQRCode = (qr: QRCode) => {
     setFormData({
-      code: qrcode.code,
-      points: qrcode.points,
-      isUsed: qrcode.isUsed,
-      _id: qrcode._id,
+      _id: qr._id,
+      code: qr.code,
+      points: qr.points,
+      isUsed: qr.isUsed,
+      brand: typeof qr.brand === "object" ? qr.brand._id : qr.brand,
     });
-    setqrcodeId(qrcode._id);
+    setqrcodeId(qr._id ?? null);
     setIsEditing(true);
     setShowModal(true);
   };
 
+  const handleDeleteqrcode = async (qr: QRCode) => {
+    try {
+      await deleteQRCodeData(qr._id!);
+      toast.success("QR Code deleted.");
+      setQrCodes((prev) => prev.filter((item) => item._id !== qr._id));
+    } catch {
+      toast.error("Error deleting QR Code.");
+    }
+  };
+
+  const columns = [
+    {
+      Header: "ID",
+      accessor: (_: any, index: number) => index + 1,
+      disableFilters: true,
+      width: 50,
+    },
+    {
+      Header: "Code",
+      accessor: "code",
+      width: 150,
+    },
+    {
+      Header: "Points",
+      accessor: "points",
+      width: 100,
+    },
+    {
+      Header: "Status",
+      accessor: "isUsed",
+      Cell: ({ value }: { value: boolean }) => (value ? "Used" : "Not Used"),
+      width: 100,
+    },
+    {
+      Header: "Brand",
+      accessor: "brand",
+      Cell: ({ value }: { value: string | Brand | null }) => {
+        if (value === null) return "N/A";
+
+        // If it's a populated Brand object
+        if (typeof value === "object" && "brandName" in value) {
+          return value.brandName;
+        }
+
+        // If it's just an ID string, find in brands list
+        const brand = brands.find((b) => b._id === value);
+        return brand?.brandName || "N/A";
+      },
+      width: 150,
+    },
+    {
+      Header: "Actions",
+      accessor: "_id",
+      Cell: ({ row }: { row: { original: QRCode } }) => (
+        <div style={{ display: "flex", gap: "5px" }}>
+          <button
+            className="btn btn-danger"
+            onClick={() => handleDeleteqrcode(row.original)}
+          >
+            Delete
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => handleEditQRCode(row.original)}
+          >
+            Edit
+          </button>
+        </div>
+      ),
+      width: 150,
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(255, 255, 255, 0.6)",
+          zIndex: 9999,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ClipLoader size={40} color="#1a8797" />
+      </div>
+    );
+  }
+
   return (
     <Container>
-      {/* {loading && <Loader />} */}
-      <ToastContainer />
       <HeaderSection>
         <div>
-          <Title>All Qrcodes</Title>
-          {/* <UserCount>({qrcode.length})</UserCount>{" "} */}
+          <Title>All QR Codes</Title>
+          <UserCount>({qrcode.length})</UserCount>
         </div>
         <div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <SearchInput type="text" placeholder="Search Qrcodes..." />
+            <SearchInput type="text" placeholder="Search QR Codes..." />
             <AddUserButton
               onClick={() => {
                 setIsEditing(false);
-                setFormData({
-                  code: "",
-                  points: 0,
-                  isUsed: false,
-                });
+                setFormData({ code: "", points: 0, isUsed: false, brand: "" });
                 handleShowModal();
               }}
             >
-              Add Qrcode
+              Add QR Code
             </AddUserButton>
           </div>
 
           <Modal show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton>
               <Modal.Title style={{ color: "#1a8797" }}>
-                {isEditing ? "Edit qrcode" : "Add New qrcode"}
+                {isEditing ? "Edit QR Code" : "Add New QR Code"}
               </Modal.Title>
             </Modal.Header>
-
             <Modal.Body>
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3">
@@ -322,6 +271,7 @@ const Qrcode: React.FC = () => {
                     value={formData.code}
                     onChange={handleChange}
                     placeholder="Enter unique code"
+                    required
                   />
                 </Form.Group>
 
@@ -333,6 +283,26 @@ const Qrcode: React.FC = () => {
                     value={formData.points}
                     onChange={handleChange}
                     placeholder="Enter points"
+                    required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Brand</Form.Label>
+                  <Select
+                    options={brands.map((brand) => ({
+                      value: brand._id,
+                      label: brand.brandName,
+                    }))}
+                    value={brands
+                      .map((b) => ({
+                        value: b._id,
+                        label: b.brandName,
+                      }))
+                      .find((opt) => opt.value === formData.brand)}
+                    onChange={handleBrandChange}
+                    placeholder="Select a brand"
+                    isSearchable
                   />
                 </Form.Group>
 
@@ -340,14 +310,20 @@ const Qrcode: React.FC = () => {
                   <Form.Check
                     type="checkbox"
                     name="isUsed"
+                    label="Used"
                     checked={formData.isUsed}
                     onChange={handleChange}
-                    label="Used"
                   />
                 </Form.Group>
 
-                <AddUserButton variant="primary" type="submit">
-                  {isEditing ? "Update QR code" : "Save QR code"}
+                <AddUserButton type="submit">
+                  {loading ? (
+                    <ClipLoader color="#fff" size={20} />
+                  ) : isEditing ? (
+                    "Update QR Code"
+                  ) : (
+                    "Save QR Code"
+                  )}
                 </AddUserButton>
               </Form>
             </Modal.Body>
@@ -355,63 +331,13 @@ const Qrcode: React.FC = () => {
         </div>
       </HeaderSection>
 
-      <Table>
-        <thead>
-          <tr>
-            <TableHeader>ID</TableHeader>
-            <TableHeader>Code</TableHeader>
-            <TableHeader>Points</TableHeader>
-            <TableHeader>IsUsed</TableHeader>
-            <TableHeader>Action</TableHeader>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.isArray(qrcode) &&
-            qrcode.map((qrcode, index) => (
-              <TableRow key={qrcode._id}>
-                <TableData>{index + 1}</TableData>
-                <TableData>{qrcode.code}</TableData>
-                <TableData>{qrcode.points}</TableData>
-                <TableData>{qrcode.isUsed ? "Used" : "Not Used"}</TableData>
-
-                <TableData>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "5px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <button
-                      onClick={() => handleDeleteqrcode(qrcode)}
-                      className="btn btn-danger ms-2"
-                      style={{
-                        padding: "7px 10px",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => handleEditQRCode(qrcode)}
-                      className="btn btn-secondary ms-2"
-                      style={{
-                        padding: "7px 10px",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Update
-                    </button>
-                  </div>
-                </TableData>
-              </TableRow>
-            ))}
-        </tbody>
-      </Table>
+      <TableContainer
+        columns={columns}
+        data={qrcode}
+        isPagination
+        iscustomPageSize
+        className="table-responsive"
+      />
     </Container>
   );
 };

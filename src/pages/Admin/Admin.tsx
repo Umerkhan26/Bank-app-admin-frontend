@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import adminPic from "../../assets/adminpic.jpeg";
 import { BsFillAwardFill } from "react-icons/bs";
-import "../../index.css";
 import {
   AdminPanel,
   Navbar,
@@ -20,206 +19,183 @@ import {
   AdminContent,
   NotificationIcon,
   DropdownIcon,
-  Heading,
   ProfilePic,
+  SearchBar,
+  Logo,
+  SidebarHeader,
+  SidebarIcon,
+  SidebarText,
+  SidebarBadge,
+  SidebarScrollWrapper,
 } from "./Admin.styles";
-import { MdCampaign, MdOutlineArrowDropDown } from "react-icons/md";
+import {
+  MdBrandingWatermark,
+  MdCampaign,
+  MdOutlineArrowDropDown,
+} from "react-icons/md";
 import { FaLocationDot, FaQrcode } from "react-icons/fa6";
+import { IoNotifications } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { AiOutlineDashboard } from "react-icons/ai";
+import { checkAuth, logout } from "../../utils/authUtils";
 
 const Admin: React.FC = () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  // Initial auth check
+  useEffect(() => {
+    if (!checkAuth()) {
+      logout();
+    }
+  }, []);
 
   const toggleDropdown = () => {
     setDropdownVisible(!dropdownVisible);
   };
 
   const handleSignOut = () => {
-    console.log("Signed out");
+    logout();
   };
 
   return (
     <AdminPanel>
-      <Navbar>
-        {/* <NavbarLogo to="/">
-          <img src="/src/assets/logo.png" alt="Legacy" />
-        </NavbarLogo> */}
-        <Heading isDashboard={true}>ADMIN DASHBOARD</Heading>
-        <NavbarList>
-          <NavbarItem to="/notifications">
-            <NotificationIcon className="fas fa-bell" />
-          </NavbarItem>
-        </NavbarList>
-        <AuthButtons>
-          <ProfilePic src={adminPic} alt="Admin Profile" />
-          <AdminName>Jane Smith</AdminName>
-          {/* <DropdownIcon onClick={toggleDropdown}>▼</DropdownIcon>{" "} */}
-          <DropdownIcon onClick={toggleDropdown}>
-            <MdOutlineArrowDropDown />
-          </DropdownIcon>{" "}
-          {/* Angle down arrow */}
-          <Dropdown show={dropdownVisible}>
-            <DropdownItem onClick={handleSignOut}>Sign Out</DropdownItem>
-          </Dropdown>
-        </AuthButtons>
-      </Navbar>
       <AdminLayoutContainer>
-        <Sidebar width="270px" bgColor="#f8f9fa">
-          <SidebarList>
-            <SidebarItem>
-              <SidebarLink
-                to="/admin/dashboard"
-                className="flex items-center space-x-2"
-              >
-                <AiOutlineDashboard
-                  className="text-xl"
-                  style={{
-                    fontSize: "25px",
-                    marginBottom: "-6px",
-                    marginRight: "10px",
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: "17px",
-                    position: "relative",
-                    top: "6px",
-                  }}
-                >
-                  Dashboard
-                </span>
-              </SidebarLink>
-            </SidebarItem>
+        <Sidebar width="270px" bgColor="#2a3042">
+          <SidebarHeader>
+            <Logo>ADMIN PANEL</Logo>
+          </SidebarHeader>
 
-            <div
-              style={{ borderTop: "2px solid #6B7280", margin: "1rem 0" }}
-            ></div>
+          <SidebarScrollWrapper>
+            <SidebarList>
+              <SidebarItem>
+                <SidebarLink to="/admin/dashboard">
+                  <SidebarIcon>
+                    <AiOutlineDashboard />
+                  </SidebarIcon>
+                  <SidebarText>Dashboard</SidebarText>
+                  <SidebarBadge>3</SidebarBadge>
+                </SidebarLink>
+              </SidebarItem>
 
-            <SidebarItem>
-              <SidebarLink to="/users">
-                <div className="flex items-center text-lg">
-                  <FaUsers
-                    className="mr-2 text-xl"
-                    style={{
-                      fontSize: "25px",
-                      marginBottom: "-6px",
-                      marginRight: "10px",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "17px",
-                      position: "relative",
-                      top: "6px",
-                    }}
-                  >
-                    Users
-                  </span>
-                </div>
-              </SidebarLink>
-            </SidebarItem>
+              <SidebarItem>
+                <SidebarLink to="/users">
+                  <SidebarIcon>
+                    <FaUsers />
+                  </SidebarIcon>
+                  <SidebarText>Users</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
 
-            <SidebarItem>
-              <SidebarLink to="/campaigns">
-                <div className="flex items-center text-lg">
-                  <MdCampaign
-                    className="mr-2 text-xl"
-                    style={{
-                      fontSize: "31px",
-                      marginBottom: "-6px",
-                      marginRight: "5px",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "17px",
-                      position: "relative",
-                      top: "5px",
-                    }}
-                  >
-                    Campaign
-                  </span>
-                </div>
-              </SidebarLink>
-            </SidebarItem>
+              <SidebarItem>
+                <SidebarLink to="/brand">
+                  <SidebarIcon>
+                    <MdBrandingWatermark />
+                  </SidebarIcon>
+                  <SidebarText>Brands</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
 
-            <SidebarItem>
-              <SidebarLink to="/stores">
-                <div className="flex items-center text-lg">
-                  <FaLocationDot
-                    className="mr-2 text-xl"
-                    style={{
-                      fontSize: "23px",
-                      marginBottom: "-6px",
-                      marginRight: "12px",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "17px",
-                      position: "relative",
-                      top: "5px",
-                    }}
-                  >
-                    Stores
-                  </span>
-                </div>
-              </SidebarLink>
-            </SidebarItem>
+              <SidebarItem>
+                <SidebarLink to="/campaigns">
+                  <SidebarIcon>
+                    <MdCampaign />
+                  </SidebarIcon>
+                  <SidebarText>Campaigns</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
 
-            <SidebarItem>
-              <SidebarLink to="/promotions">
-                <div className="flex items-center text-lg">
-                  <BsFillAwardFill
-                    className="mr-2 text-xl"
-                    style={{
-                      fontSize: "23px",
-                      marginBottom: "-6px",
-                      marginRight: "12px",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "17px",
-                      position: "relative",
-                      top: "5px",
-                    }}
-                  >
-                    Promotion
-                  </span>
-                </div>
-              </SidebarLink>
-            </SidebarItem>
+              <SidebarItem>
+                <SidebarLink to="/stores">
+                  <SidebarIcon>
+                    <FaLocationDot />
+                  </SidebarIcon>
+                  <SidebarText>Stores</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
 
-            <SidebarItem>
-              <SidebarLink to="/qrcodes">
-                <div className="flex items-center text-lg">
-                  <FaQrcode
-                    className="mr-2 text-xl"
-                    style={{
-                      fontSize: "23px",
-                      marginBottom: "-6px",
-                      marginRight: "12px",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "17px",
-                      position: "relative",
-                      top: "5px",
-                    }}
-                  >
-                    Qrcode
-                  </span>
-                </div>
-              </SidebarLink>
-            </SidebarItem>
-          </SidebarList>
+              <SidebarItem>
+                <SidebarLink to="/promotions">
+                  <SidebarIcon>
+                    <BsFillAwardFill />
+                  </SidebarIcon>
+                  <SidebarText>Promotions</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              <SidebarItem>
+                <SidebarLink to="/qrcodes">
+                  <SidebarIcon>
+                    <FaQrcode />
+                  </SidebarIcon>
+                  <SidebarText>QR Codes</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              <SidebarItem>
+                <SidebarLink to="/notifications">
+                  <SidebarIcon>
+                    <IoNotifications />
+                  </SidebarIcon>
+                  <SidebarText>Notifications</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              {/* Additional items to demonstrate scroll */}
+              <SidebarItem>
+                <SidebarLink to="/bank-premium">
+                  <SidebarIcon>
+                    <AiOutlineDashboard />
+                  </SidebarIcon>
+                  <SidebarText>Bank Premium</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              <SidebarItem>
+                <SidebarLink to="/settings">
+                  <SidebarIcon>
+                    <AiOutlineDashboard />
+                  </SidebarIcon>
+                  <SidebarText>Settings</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              <SidebarItem>
+                <SidebarLink to="/reports">
+                  <SidebarIcon>
+                    <AiOutlineDashboard />
+                  </SidebarIcon>
+                  <SidebarText>Reports</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+            </SidebarList>
+          </SidebarScrollWrapper>
         </Sidebar>
-        <AdminContent>
-          <Outlet />
-        </AdminContent>
+
+        <div>
+          <Navbar>
+            <SearchBar type="text" placeholder="Search..." />
+            <NavbarList>
+              <NavbarItem to={""}>
+                <NotificationIcon className="fas fa-bell" />
+              </NavbarItem>
+            </NavbarList>
+            <AuthButtons>
+              <ProfilePic src={adminPic} alt="Admin Profile" />
+              <AdminName>{user.name}</AdminName>
+              <DropdownIcon onClick={toggleDropdown}>
+                <MdOutlineArrowDropDown />
+              </DropdownIcon>
+              <Dropdown show={dropdownVisible}>
+                <DropdownItem onClick={handleSignOut}>Sign Out</DropdownItem>
+              </Dropdown>
+            </AuthButtons>
+          </Navbar>
+
+          <AdminContent>
+            <Outlet />
+          </AdminContent>
+        </div>
       </AdminLayoutContainer>
     </AdminPanel>
   );

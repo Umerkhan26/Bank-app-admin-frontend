@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "./brandService";
 
 export const createPromotionData = async (formData: FormData) => {
   const token = localStorage.getItem("token");
@@ -8,16 +9,12 @@ export const createPromotionData = async (formData: FormData) => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/createPromotion",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data", // Ensure correct Content-Type
-        },
-      }
-    );
+    const response = await axios.post(`${API_URL}/createPromotion`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating promotion:", error);
@@ -33,14 +30,11 @@ export const getPromotionsData = async () => {
   }
 
   try {
-    const response = await axios.get(
-      "http://localhost:3000/api/getPromotions",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await axios.get(`${API_URL}/getPromotions`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching promotions:", error);
@@ -60,7 +54,7 @@ export const updatePromotionData = async (
 
   try {
     const response = await axios.put(
-      `http://localhost:3000/api/updatePromotion/${promotionId}`,
+      `${API_URL}/updatePromotion/${promotionId}`,
       formData,
       {
         headers: {
@@ -84,16 +78,15 @@ export const deletePromotionData = async (promotionId: string) => {
     throw new Error("Authorization token is missing");
   }
 
-  console.log("Deleting campaign with ID:", promotionId); // Log the campaign ID
+  console.log("Deleting campaign with ID:", promotionId);
 
-  // Validate the campaignId format (should be a 24-character hex string)
   if (!/^[0-9a-fA-F]{24}$/.test(promotionId)) {
     throw new Error("Invalid campaign ID format");
   }
 
   try {
     const response = await axios.delete(
-      `http://localhost:3000/api/deletePromotion/${promotionId}`,
+      `${API_URL}/deletePromotion/${promotionId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

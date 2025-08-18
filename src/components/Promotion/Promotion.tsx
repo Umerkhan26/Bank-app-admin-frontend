@@ -1,10 +1,10 @@
-import React from "react";
-import { deleteUser, updateUserStatus } from "../../services/user";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import Select from "react-select";
+import { ClipLoader } from "react-spinners";
+import { CellProps, Column } from "react-table";
 
 import {
   Container,
@@ -13,21 +13,17 @@ import {
   UserCount,
   SearchInput,
   AddUserButton,
-  Table,
-  TableHeader,
-  TableRow,
-  TableData,
 } from "../users/User.Styles";
 import { getStoresData } from "../../services/store";
-// import Loader from "../../components/Loader/Loader";
-import { Promotions } from "../../type";
+import { Promotions, PromotionTable } from "../../type";
 import {
   createPromotionData,
   deletePromotionData,
   getPromotionsData,
   updatePromotionData,
 } from "../../services/promotion";
-import { ClipLoader } from "react-spinners";
+import { getAllBrands } from "../../services/brandService";
+import TableContainer from "../TabConatiner/TableConatiner";
 
 type FormData = {
   title: string;
@@ -39,23 +35,28 @@ type FormData = {
   image: File | null;
   imagePreview: string | null;
   store: string[];
+  brand: string;
 };
 
-const Promotion: React.FC = () => {
-  const [promotion, setpromotions] = useState<Promotions[]>([]);
+interface Brand {
+  _id: string;
+  brandName: string;
+}
 
+const Promotion: React.FC = () => {
+  const [promotions, setPromotions] = useState<Promotions[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<null | Error>(null);
-  const [editingStatusUserId, setEditingStatusUserId] = useState<string | null>(
-    null
-  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [promotionId, setpromotionId] = useState<string | null>(null);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [promotionId, setPromotionId] = useState<string | null>(null);
   const [stores, setStores] = useState<{ _id: string; storeName: string }[]>(
     []
   );
-
   const [showModal, setShowModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -65,43 +66,49 @@ const Promotion: React.FC = () => {
     pointsRequired: "",
     image: null,
     imagePreview: null,
-    store: [] as string[],
+    store: [],
+    brand: "",
   });
 
   useEffect(() => {
-    const fetchStores = async () => {
+    const fetchStoresAndBrands = async () => {
+      setLoading(true);
       try {
-        const response = await getStoresData();
-        console.log("Fetched stores:", response);
+        const [storesResponse, brandsResponse] = await Promise.all([
+          getStoresData(),
+          getAllBrands(),
+        ]);
 
-        if (Array.isArray(response.stores)) {
-          const extractedStores = response.stores.map((store) => ({
+        if (Array.isArray(storesResponse.stores)) {
+          const extractedStores = storesResponse.stores.map((store) => ({
             _id: store._id,
             storeName: store.storeName,
           }));
-
-          console.log("Extracted stores:", extractedStores);
-
           setStores(extractedStores);
-        } else {
-          console.error("Store data is not an array", response);
         }
+
+        setBrands(brandsResponse);
       } catch (error) {
-        console.error("Error fetching stores:", error);
+        console.error("Error fetching data:", error);
+        toast.error("Error fetching data. Please try again later.");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchStores();
+    fetchStoresAndBrands();
   }, []);
 
   const fetchPromotions = async () => {
     try {
+      setLoading(true);
       const data = await getPromotionsData();
-      console.log("Fetched Promotions:", data.promotions);
-      setpromotions(data.promotions);
+      setPromotions(data.promotions);
     } catch (error) {
       console.error("Error fetching promotions:", error);
       toast.error("Error fetching promotions. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -109,48 +116,36 @@ const Promotion: React.FC = () => {
     fetchPromotions();
   }, []);
 
-  if (error) return <div>Error loading users: {error.message}</div>;
-
-  const handleStatusOptionChange = async (userId: string, status: string) => {
-    const newStatus = status === "Active";
-
-    try {
-      const updatedUser = await updateUserStatus({ userId, newStatus });
-
-      setpromotions((prevUsers) =>
-        prevUsers.map((user) =>
-          user._id === updatedUser._id
-            ? { ...user, isActive: updatedUser.isActive }
-            : user
-        )
-      );
-
-      setEditingStatusUserId(null);
-    } catch (err) {
-      console.error("Error updating user status:", err);
-      setError(new Error("Failed to update user status"));
-    }
+  const handleBrandChange = (
+    selectedOption: { value: string; label: string } | null
+  ) => {
+    setFormData((prev) => ({ ...prev, brand: selectedOption?.value || "" }));
   };
 
-  const handleDeletepromotion = async (promotion: { _id: string }) => {
+  const handleDeletePromotion = async (promotion: { _id: string }) => {
+    if (!window.confirm("Are you sure you want to delete this promotion?"))
+      return;
+
     try {
-      const promotionId = promotion._id;
-
-      const deletedpromotion = await deletePromotionData(promotionId);
-      console.log("Deleted promotion:", deletedpromotion);
-      toast.success("promotion deleted successfully!");
-
-      setpromotions((prevpromotions) =>
-        prevpromotions.filter((promotion) => promotion._id !== promotionId)
+      setIsDeleting(true);
+      setDeletingId(promotion._id);
+      await deletePromotionData(promotion._id);
+      toast.success("Promotion deleted successfully!");
+      setPromotions((prevPromotions) =>
+        prevPromotions.filter((p) => p._id !== promotion._id)
       );
-
-      // Optionally, show a success message or confirmatio
     } catch (error) {
       console.error("Error deleting promotion:", error);
+      toast.error("Error deleting promotion!");
+    } finally {
+      setIsDeleting(false);
+      setDeletingId(null);
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -160,17 +155,12 @@ const Promotion: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Check file type (optional but recommended)
-      if (file.type.startsWith("image/")) {
-        setFormData((prevFormData) => ({
-          ...prevFormData,
-          image: file, // Store the file
-          imagePreview: URL.createObjectURL(file),
-        }));
-      } else {
-        alert("Please upload a valid image file.");
-      }
+    if (file && file.type.startsWith("image/")) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        image: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
     }
   };
 
@@ -181,45 +171,25 @@ const Promotion: React.FC = () => {
   const handleShowModal = () => {
     setShowModal(true);
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    const startDate = formData.start_date
-      ? new Date(formData.start_date)
-      : new Date();
-    const endDate = formData.end_date
-      ? new Date(formData.end_date)
-      : new Date();
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      console.error(
-        "Invalid date values:",
-        formData.start_date,
-        formData.end_date
-      );
-      return;
-    }
-
-    const pointsRequired =
-      formData.pointsRequired && !isNaN(Number(formData.pointsRequired))
-        ? formData.pointsRequired
-        : "0"; // Default value or handle accordingly
+    setIsSaving(true);
 
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
     formDataToSend.append("description", formData.description);
-    formDataToSend.append("start_date", startDate.toISOString());
-    formDataToSend.append("end_date", endDate.toISOString());
-    formDataToSend.append("points_required", pointsRequired.toString());
+    formDataToSend.append("start_date", formData.start_date);
+    formDataToSend.append("end_date", formData.end_date);
+    formDataToSend.append("points_required", formData.pointsRequired || "0");
+    formDataToSend.append("active", String(formData.status === "Active"));
 
-    // Handle the `stores` field
+    if (formData.brand) {
+      formDataToSend.append("brand", formData.brand);
+    }
+
     if (Array.isArray(formData.store)) {
       formDataToSend.append("stores", formData.store.join(","));
-    } else if (typeof formData.store === "string") {
-      formDataToSend.append("stores", formData.store);
-    } else {
-      formDataToSend.append("stores", "");
     }
 
     if (formData.image) {
@@ -227,52 +197,15 @@ const Promotion: React.FC = () => {
     }
 
     try {
-      let promotionResponse;
-
       if (isEditing && promotionId) {
-        // Update existing promotion if `isEditing` is true
-        promotionResponse = await updatePromotionData(
-          formDataToSend,
-          promotionId
-        );
-        console.log("UpdatedDDDDD Promotion Response:", promotionResponse);
+        await updatePromotionData(formDataToSend, promotionId);
         toast.success("Promotion updated successfully!");
       } else {
-        // Create new promotion if `isEditing` is false
-        promotionResponse = await createPromotionData(formDataToSend);
-        console.log("Created Promotion Response:", promotionResponse);
+        await createPromotionData(formDataToSend);
         toast.success("Promotion created successfully!");
       }
 
-      setpromotions((prevPromotions) => {
-        if (isEditing && promotionId) {
-          return prevPromotions.map((promotion) =>
-            promotion._id === promotionId
-              ? { ...promotionResponse.promotion, id: promotionId }
-              : promotion
-          );
-        } else {
-          return [
-            ...prevPromotions,
-            {
-              ...promotionResponse.promotion,
-              id:
-                promotionResponse.promotion._id ||
-                Math.random().toString(36).substr(2, 9),
-            },
-          ];
-        }
-      });
-
-      // Refetch campaigns for consistency
-      const updatedPromotions = await getPromotionsData();
-      console.log("Updated promotions data:", updatedPromotions);
-      setpromotions(updatedPromotions);
-
-      // Fetch updated promotions list
       await fetchPromotions();
-
-      // Reset form data
       setFormData({
         title: "",
         description: "",
@@ -280,122 +213,309 @@ const Promotion: React.FC = () => {
         end_date: "",
         pointsRequired: "",
         image: null,
-        stores: [],
+        imagePreview: null,
+        status: "Active",
+        store: [],
+        brand: "",
       });
-
-      // Close modal and reset edit state
       setIsEditing(false);
       handleCloseModal();
     } catch (error) {
       console.error("Error submitting promotion:", error);
       toast.error("Error submitting the promotion. Please try again later.");
+    } finally {
+      setIsSaving(false);
     }
-    setLoading(false);
   };
 
-  const handleEditpromotion = (promotion) => {
+  const handleEditPromotion = (promotion: Promotions) => {
     setFormData({
       title: promotion.title,
       description: promotion.description,
       start_date: promotion.start_date,
       end_date: promotion.end_date,
-      pointsRequired: promotion.pointsRequired,
+      pointsRequired: promotion.points_required,
       imagePreview: promotion.image_url || null,
-      status: promotion.status || "",
+      status: promotion.active ? "Active" : "Inactive",
       image: null,
-      store: [],
+      store: promotion.stores || [],
+      brand:
+        typeof promotion.brand === "object"
+          ? promotion.brand._id
+          : promotion.brand || "",
     });
-    setpromotionId(promotion._id);
+    setPromotionId(promotion._id);
     setIsEditing(true);
     setShowModal(true);
   };
 
-  return (
-    <Container>
-      {/* {loading && <Loader />} */}
-      <ToastContainer />
-      <HeaderSection>
-        <div>
-          <Title>All Promotions</Title>
-          <UserCount>({promotion.length})</UserCount>{" "}
+  const columns: Column<PromotionTable>[] = [
+    {
+      Header: "ID",
+      accessor: (_row, index) => index + 1,
+      width: 40,
+    },
+    {
+      Header: "Title",
+      accessor: "title",
+      width: 130,
+    },
+    {
+      Header: "Description",
+      accessor: "description",
+      width: 110,
+    },
+    {
+      Header: "Start Date",
+      accessor: (row) =>
+        row.start_date
+          ? new Date(row.start_date).toISOString().slice(0, 10)
+          : "N/A",
+      width: 90,
+    },
+    {
+      Header: "End Date",
+      accessor: (row) =>
+        row.end_date
+          ? new Date(row.end_date).toISOString().slice(0, 10)
+          : "N/A",
+      width: 90,
+    },
+    {
+      Header: "Brand",
+      accessor: (row) =>
+        typeof row.brand === "object" && row.brand !== null
+          ? row.brand.brandName
+          : row.brand ?? "N/A",
+      width: 60,
+    },
+    {
+      Header: "Stores",
+      accessor: (row) =>
+        row.stores && row.stores.length > 0 ? row.stores.join(", ") : "N/A",
+      width: 140,
+    },
+    {
+      Header: "Image",
+      accessor: "image_url",
+      Cell: ({ value }: CellProps<PromotionTable, string | undefined>) =>
+        value ? (
+          <img
+            src={value}
+            alt="promotion"
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+            }}
+          />
+        ) : (
+          <span>N/A</span>
+        ),
+      width: 60,
+    },
+    {
+      Header: "Status",
+      accessor: "active",
+      Cell: ({ value }) => (
+        <span style={{ color: value ? "green" : "red" }}>
+          {value ? "Active" : "Inactive"}
+        </span>
+      ),
+      width: 60,
+    },
+    {
+      Header: "Actions",
+      accessor: "_id",
+      Cell: ({ row }) => (
+        <div style={{ display: "flex", gap: "5px" }}>
+          <button
+            onClick={() => handleDeletePromotion(row.original)}
+            className="btn btn-danger"
+            style={{
+              padding: "5px 8px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+            disabled={isDeleting}
+          >
+            {isDeleting && deletingId === row.original._id ? (
+              <ClipLoader size={15} color="#fff" />
+            ) : (
+              "Delete"
+            )}
+          </button>
+          <button
+            onClick={() => handleEditPromotion(row.original)}
+            className="btn btn-secondary"
+            style={{
+              padding: "5px 15px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+            disabled={isSaving || isDeleting}
+          >
+            Edit
+          </button>
         </div>
-        <div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <SearchInput type="text" placeholder="Search promotions..." />
-            <AddUserButton
-              onClick={() => {
-                setIsEditing(false);
-                setFormData({
-                  title: "",
-                  description: "",
-                  start_date: "",
-                  end_date: "",
-                  pointsRequired: "",
-                  image: null,
-                  imagePreview: null,
-                  status: "", // Add default value for status
-                  store: "",
-                });
-                handleShowModal();
-              }}
-            >
-              Add Promotion
-            </AddUserButton>
+      ),
+      width: 140,
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(255, 255, 255, 0.6)",
+          zIndex: 9999,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <ClipLoader size={40} color="#1a8797" />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <ToastContainer />
+      {(isSaving || isDeleting) && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(255, 255, 255, 0.6)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ClipLoader size={40} color="#1a8797" />
+        </div>
+      )}
+
+      <Container>
+        <HeaderSection>
+          <div>
+            <Title>All Promotions</Title>
+            <UserCount>({promotions.length})</UserCount>
           </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <SearchInput type="text" placeholder="Search promotions..." />
+              <AddUserButton
+                onClick={() => {
+                  setIsEditing(false);
+                  setFormData({
+                    title: "",
+                    description: "",
+                    start_date: "",
+                    end_date: "",
+                    pointsRequired: "",
+                    image: null,
+                    imagePreview: null,
+                    status: "Active",
+                    store: [],
+                    brand: "",
+                  });
+                  handleShowModal();
+                }}
+                disabled={isSaving || isDeleting}
+              >
+                Add Promotion
+              </AddUserButton>
+            </div>
 
-          <Modal show={showModal} onHide={handleCloseModal}>
-            <Modal.Header closeButton>
-              <Modal.Title style={{ color: "#1a8797" }}>
-                {isEditing ? "Edit promotion" : "Add New promotion"}
-              </Modal.Title>
-            </Modal.Header>
+            <Modal show={showModal} onHide={handleCloseModal}>
+              <Modal.Header closeButton>
+                <Modal.Title style={{ color: "#1a8797" }}>
+                  {isEditing ? "Edit Promotion" : "Add New Promotion"}
+                </Modal.Title>
+              </Modal.Header>
 
-            <Modal.Body>
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Title</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    placeholder="Enter promotion title"
-                  />
-                </Form.Group>
+              <Modal.Body>
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Title</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="Enter promotion title"
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Description</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Enter promotion description"
-                  />
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Description</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      rows={3}
+                      placeholder="Enter promotion description"
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Start Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="start_date"
-                    value={formData.start_date}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Start Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="start_date"
+                      value={formData.start_date}
+                      onChange={handleChange}
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>End Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="end_date"
-                    value={formData.end_date}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>End Date</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="end_date"
+                      value={formData.end_date}
+                      onChange={handleChange}
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
 
-                {
+                  <Form.Group className="mb-3">
+                    <Form.Label>Brand</Form.Label>
+                    <Select
+                      options={brands.map((brand) => ({
+                        value: brand._id,
+                        label: brand.brandName,
+                      }))}
+                      value={brands
+                        .map((brand) => ({
+                          value: brand._id,
+                          label: brand.brandName,
+                        }))
+                        .find((option) => option.value === formData.brand)}
+                      onChange={handleBrandChange}
+                      isSearchable
+                      placeholder="Select a brand"
+                      isDisabled={isSaving}
+                    />
+                  </Form.Group>
+
                   <Form.Group className="mb-3">
                     <Form.Label>Stores</Form.Label>
                     <Select
@@ -405,217 +525,85 @@ const Promotion: React.FC = () => {
                         value: store._id,
                         label: store.storeName,
                       }))}
-                      value={
-                        Array.isArray(formData.store)
-                          ? formData.store.map((storeId) => ({
-                              value: storeId,
-                              label:
-                                stores.find((store) => store._id === storeId)
-                                  ?.storeName || "",
-                            }))
-                          : []
-                      }
+                      value={formData.store.map((storeId) => ({
+                        value: storeId,
+                        label:
+                          stores.find((store) => store._id === storeId)
+                            ?.storeName || "",
+                      }))}
                       onChange={(selectedOptions) => {
-                        const selectedStores = selectedOptions.map(
-                          (option) => option.value
-                        );
+                        const selectedStores =
+                          selectedOptions?.map((option) => option.value) || [];
                         setFormData({
                           ...formData,
                           store: selectedStores,
                         });
                       }}
                       placeholder="Select stores"
+                      isDisabled={isSaving}
                     />
                   </Form.Group>
-                }
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Point</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="pointsRequired"
-                    value={formData.pointsRequired}
-                    onChange={handleChange}
-                    placeholder="Enter promotion point"
-                  />
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Point</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="pointsRequired"
+                      value={formData.pointsRequired}
+                      onChange={handleChange}
+                      placeholder="Enter promotion point"
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>promotion Image</Form.Label>
-                  <Form.Control
-                    type="file"
-                    name="image"
-                    onChange={handleFileChange}
-                    accept="image/*"
-                  />
-                  {formData.imagePreview && (
-                    <div style={{ marginTop: "10px" }}>
-                      <img
-                        src={formData.imagePreview}
-                        alt="promotion Preview"
-                        style={{
-                          width: "100%",
-                          maxWidth: "200px",
-                          height: "auto",
-                        }}
-                      />
-                    </div>
-                  )}
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Promotion Image</Form.Label>
+                    <Form.Control
+                      type="file"
+                      name="image"
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      disabled={isSaving}
+                    />
+                    {formData.imagePreview && (
+                      <div style={{ marginTop: "10px" }}>
+                        <img
+                          src={formData.imagePreview}
+                          alt="Promotion Preview"
+                          style={{
+                            width: "100%",
+                            maxWidth: "200px",
+                            height: "auto",
+                          }}
+                        />
+                      </div>
+                    )}
+                  </Form.Group>
 
-                <AddUserButton variant="primary" type="submit">
-                  {loading ? (
-                    <ClipLoader color="#fff" size={20} loading={loading} />
-                  ) : isEditing ? (
-                    "Update Promotion"
-                  ) : (
-                    "Save Promotion"
-                  )}
-                </AddUserButton>
-              </Form>
-            </Modal.Body>
-          </Modal>
-        </div>
-      </HeaderSection>
+                  <AddUserButton type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <ClipLoader color="#fff" size={20} />
+                    ) : isEditing ? (
+                      "Update Promotion"
+                    ) : (
+                      "Save Promotion"
+                    )}
+                  </AddUserButton>
+                </Form>
+              </Modal.Body>
+            </Modal>
+          </div>
+        </HeaderSection>
 
-      <Table>
-        <thead>
-          <tr>
-            <TableHeader>ID</TableHeader>
-            <TableHeader>Title</TableHeader>
-            <TableHeader>Description</TableHeader>
-            <TableHeader>Start Date</TableHeader>
-            <TableHeader>End Date</TableHeader>
-            <TableHeader>Store</TableHeader>
-            <TableHeader>Image</TableHeader>
-            <TableHeader>Action</TableHeader>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.isArray(promotion) &&
-            promotion.map((promotion, index) => (
-              <TableRow key={promotion.id}>
-                <TableData>{index + 1}</TableData>
-                <TableData>{promotion.title}</TableData>
-                <TableData>{promotion.description}</TableData>
-                <TableData>
-                  {promotion.start_date
-                    ? new Date(promotion.start_date).toISOString().slice(0, 10)
-                    : "N/A"}
-                </TableData>
-                <TableData>
-                  {promotion.end_date
-                    ? new Date(promotion.end_date).toISOString().slice(0, 10)
-                    : "N/A"}
-                </TableData>
-                <TableData>
-                  {/* {promotion.store ? promotion.store.storeName : "N/A"}{" "} */}
-                  {promotion.stores && promotion.stores.length > 0
-                    ? promotion.stores.join(", ") // Joins all store IDs into a comma-separated string
-                    : "N/A"}
-
-                  {/* Store Name */}
-                </TableData>
-                <TableData>
-                  <img
-                    src={promotion.image_url}
-                    alt="promotion"
-                    style={{
-                      width: "50px",
-                      height: "50px",
-                      borderRadius: "50%",
-                    }}
-                  />
-                </TableData>
-                <TableData>
-                  {editingStatusUserId === promotion._id ? (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "5px",
-                        alignItems: "center",
-                      }}
-                    >
-                      <button
-                        onClick={() =>
-                          handleStatusOptionChange(promotion._id, "Active")
-                        }
-                        style={{
-                          backgroundColor: promotion.isActive
-                            ? "#1a8797"
-                            : "#1a8797",
-                          color: "white",
-                          padding: "7px 15px",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Active
-                      </button>
-
-                      {/* <button
-                        onClick={() => handleDeleteUser(promotion)}
-                        className="btn btn-danger ms-2"
-                        style={{
-                          padding: "7px 9px",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Delete
-                      </button> */}
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      {/* <button
-                        onClick={() => toggleStatusButtons(promotion._id)}
-                        style={{
-                          backgroundColor: promotion.isActive
-                            ? "#1a8797"
-                            : "#dc3545",
-                          color: "white",
-                          padding: "7px 9px",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {promotion.isActive ? "Active" : "Finished"}
-                      </button> */}
-                      <button
-                        onClick={() => handleDeletepromotion(promotion)}
-                        className="btn btn-danger ms-2"
-                        style={{
-                          padding: "7px 10px",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        onClick={() => handleEditpromotion(promotion)}
-                        className="btn btn-secondary ms-2"
-                        style={{
-                          padding: "7px 10px",
-                          border: "none",
-                          borderRadius: "5px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Update
-                      </button>
-                    </div>
-                  )}
-                </TableData>
-              </TableRow>
-            ))}
-        </tbody>
-      </Table>
-    </Container>
+        <TableContainer
+          columns={columns}
+          data={promotions}
+          isPagination={true}
+          iscustomPageSize={true}
+          className="table-responsive"
+        />
+      </Container>
+    </div>
   );
 };
 

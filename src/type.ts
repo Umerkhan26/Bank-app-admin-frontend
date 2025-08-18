@@ -1,17 +1,17 @@
-export interface Campaigns {
-  _id: string;
-  isBlocked: boolean;
-  isActive: boolean;
-  id: number;
-  title: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  image_url: File | null;
-  action: string;
-  imagePreview: string | null;
-  status: string;
-}
+// export interface Campaigns {
+//   _id: string;
+//   isBlocked: boolean;
+//   isActive: boolean;
+//   id: number;
+//   title: string;
+//   description: string;
+//   start_date: string;
+//   end_date: string;
+//   image_url: File | null;
+//   action: string;
+//   imagePreview: string | null;
+//   status: string;
+// }
 
 interface Location {
   latitude: number;
@@ -29,6 +29,12 @@ export interface Stores {
   description: string;
   action: string;
   status: string;
+  brand: string;
+}
+
+export interface StoreApiResponse {
+  store: Stores;
+  message: string;
 }
 
 export interface Campaigns {
@@ -40,10 +46,16 @@ export interface Campaigns {
   description: string;
   start_date: string;
   end_date: string;
-  image_url: File | null;
+  image_url: string | null; // ✅ Fix here
   action: string;
   imagePreview: string | null;
+  enrolled_users: string[];
   status: string;
+  brand: {
+    _id: string;
+    brandName: string;
+  } | null; // ✅ To match actual object structure
+  pointsRequired: string;
 }
 
 export interface Promotions {
@@ -54,15 +66,24 @@ export interface Promotions {
   end_date: string;
   points_required: string;
   active: boolean;
-  stores: string[]; // Assuming stores is an array of strings
-  image?: File | null; // Optional if the image may not be present
+  stores: string[];
+  image_url?: string;
+  brand?: { _id: string; brandName: string } | string;
 }
 
-export type QRCode = {
+export type PromotionTable = Promotions;
+
+export type Brand = {
   _id: string;
+  brandName: string;
+};
+
+export type QRCode = {
+  _id?: string;
   code: string;
   points: number;
   isUsed: boolean;
+  brand: Brand | string;
 };
 
 export type QRCodeResponse = {

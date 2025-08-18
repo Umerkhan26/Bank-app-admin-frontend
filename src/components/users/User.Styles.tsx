@@ -1,8 +1,9 @@
-// Styled Components
 import styled from "styled-components";
 
 export const Container = styled.div`
   padding: 20px;
+  // width: 100%;
+  // max-width: 1200px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -18,6 +19,7 @@ export const HeaderSection = styled.div`
 export const Title = styled.h2`
   margin: 0;
   color: black;
+  font-size: 18px;
 `;
 
 export const UserCount = styled.span`
@@ -26,7 +28,7 @@ export const UserCount = styled.span`
 `;
 
 export const SearchInput = styled.input`
-  padding: 10px;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 200px;
@@ -34,7 +36,7 @@ export const SearchInput = styled.input`
 `;
 
 export const AddUserButton = styled.button`
-  padding: 10px 15px;
+  padding: 8px 10px;
   border: none;
   border-radius: 4px;
   background-color: #1a8797;
@@ -45,6 +47,7 @@ export const AddUserButton = styled.button`
 export const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+  border: 1px solid #ddd; /* Add border around the entire table */
 `;
 
 export const TableHeader = styled.th`
@@ -52,10 +55,13 @@ export const TableHeader = styled.th`
   color: black;
   padding: 10px;
   text-align: left;
+  font-size: 0.725rem;
+  font-weight: bold;
+  border: 1px solid #ddd; /* Add border to header cells */
 `;
 
 export const TableRow = styled.tr`
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #ddd; /* Add border to rows */
 
   &:hover {
     background-color: #f1f1f1;
@@ -65,7 +71,8 @@ export const TableRow = styled.tr`
 export const TableData = styled.td`
   padding: 10px;
   color: black;
-  font-size: 15px;
+  font-size: 12px;
+  border: 1px solid #ddd; /* Add border to data cells */
 `;
 
 export const UserProfilePic = styled.img`

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "./brandService";
 
 export const createqrcodeData = async (qrcodeData: any) => {
   const token = localStorage.getItem("token");
@@ -8,27 +9,27 @@ export const createqrcodeData = async (qrcodeData: any) => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/createqrCode",
-      qrcodeData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    console.log("response of create post", response);
+    const response = await axios.post(`${API_URL}/createqrCode`, qrcodeData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating QR code:", error);
-    throw error;
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        error.response.data.message || "Failed to create QR code"
+      );
+    }
+    throw new Error("Failed to create QR code");
   }
 };
 
 export const getqrcodeData = async () => {
   try {
-    const response = await axios.get("http://localhost:3000/api/getqrCode");
+    const response = await axios.get(`${API_URL}/getqrCode`);
     return response.data;
   } catch (error) {
     console.error("Error fetching QR code data:", error);
@@ -41,30 +42,33 @@ export const updateQRCodeData = async (
     code: string;
     points: number;
     isUsed: boolean;
+    brand: string;
   },
   qrCodeId: string
 ): Promise<any> => {
   try {
-    const token = localStorage.getItem("token"); // Retrieve token from local storage
-
+    const token = localStorage.getItem("token");
+    console.log("Token used for request:", token);
     if (!token) {
       throw new Error("No authentication token found");
     }
 
     const response = await axios.put(
-      `http://localhost:3000/api/updateQRCode/${qrCodeId}`,
-      qrCodeData, // Send QR Code data as JSON
+      `${API_URL}/updateQRCode/${qrCodeId}`,
+      qrCodeData,
       {
         headers: {
-          Authorization: `Bearer ${token}`, // Add token to request header
+          Authorization: `Bearer ${token}`,
         },
       }
     );
 
-    return response.data; // Assuming the backend sends the updated QR Code in the response
-  } catch (error) {
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || "Error updating QR Code";
     console.error("Error updating QR Code:", error);
-    throw new Error("Error updating QR Code");
+    throw new Error(errorMessage);
   }
 };
 
@@ -76,14 +80,11 @@ export const deleteQRCodeData = async (qrCodeId: string) => {
   }
 
   try {
-    const response = await axios.delete(
-      `http://localhost:3000/api/deleteqrCode/${qrCodeId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await axios.delete(`${API_URL}/deleteqrCode/${qrCodeId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error deleting store:", error);

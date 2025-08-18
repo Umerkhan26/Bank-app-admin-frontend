@@ -1,6 +1,14 @@
-// StyledComponents.js
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+
+interface DropdownProps {
+  show: boolean;
+}
+
+interface SidebarProps {
+  width?: string;
+  bgColor?: string;
+}
 
 export const AdminPanel = styled.div`
   display: flex;
@@ -8,22 +16,59 @@ export const AdminPanel = styled.div`
   height: 100vh;
 `;
 
+export const AdminLayoutContainer = styled.div`
+  display: flex;
+  flex: 1;
+`;
+
+export const Sidebar = styled.nav<SidebarProps>`
+  width: ${({ width }) => width || "270px"};
+  background-color: ${({ bgColor }) => bgColor || "#2a3042"};
+  color: #ffffff;
+  padding: 20px 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  height: 100vh;
+  top: 0;
+  left: 0;
+`;
+
+export const Logo = styled.div`
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+  padding: 10px 20px;
+  border-bottom: 1px solid #3b4b66;
+`;
+
+export const SidebarList = styled.ul`
+  list-style-type: none;
+  padding: 0;
+  margin-top: 20px;
+`;
+
 export const Navbar = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   padding: 10px 20px;
-  color: #0c313f;
+  color: #2a3042;
+  width: calc(100% - 270px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 270px;
+  z-index: 1000;
 `;
 
-export const NavbarLogo = styled(Link)`
-  display: flex;
-  align-items: center;
-
-  img {
-    height: 40px;
-  }
+export const SearchBar = styled.input`
+  padding: 5px 10px;
+  margin: 0 20px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #2a3042;
 `;
 
 export const NavbarList = styled.div`
@@ -31,10 +76,9 @@ export const NavbarList = styled.div`
 `;
 
 export const NavbarItem = styled(Link)`
-  color: #0c313f;
+  color: #2a3042;
   text-decoration: none;
   margin: 0 15px;
-
   &:hover {
     color: #007bff;
   }
@@ -47,16 +91,17 @@ export const AuthButtons = styled.div`
 `;
 
 export const AdminName = styled.span`
-  margin-left: 5px;
-  color: #0c313f;
-  font-weight: light;
+  margin-left: 10px;
+  color: #2a3042;
+  font-weight: 500;
   cursor: pointer;
 `;
 
-export const Dropdown = styled.div`
+export const Dropdown = styled.div<DropdownProps>`
   position: absolute;
-  top: 50px;
-  background-color: white;
+  top: 40px;
+  right: 0;
+  background-color: #ffffff;
   border: 1px solid #ccc;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: ${(props) => (props.show ? "block" : "none")};
@@ -66,98 +111,152 @@ export const Dropdown = styled.div`
 export const DropdownItem = styled.div`
   padding: 10px;
   cursor: pointer;
-
   &:hover {
     background-color: #f1f1f1;
-  }
-`;
-
-export const AdminLayoutContainer = styled.div`
-  display: flex;
-  flex: 1;
-  background: #fff;
-`;
-
-export const Sidebar = styled.nav`
-  width: ${({ width }) => width || "250px"};
-  height: 480px;
-  background-color: white;
-  color: black;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-`;
-
-export const SidebarList = styled.ul`
-  list-style-type: none;
-  padding: 0;
-`;
-
-export const SidebarItem = styled.li`
-  margin: 10px 0;
-`;
-
-export const SidebarLink = styled(Link)`
-  text-decoration: none;
-  // color: #007bff;
-  color: #1a8797;
-  padding: 10px;
-  font-weight: 600;
-  display: block;
-  transition: background-color 0.3s;
-
-  &:hover {
-    color: #1a8797;
-    // background-color: rgba(0, 123, 255, 0.1);
-    background-color: rgb(236, 236, 236);
   }
 `;
 
 export const AdminContent = styled.main`
   flex: 1;
   padding: 20px;
+  margin-left: 270px;
+  margin-top: 60px; /* Adjust to prevent overlap with navbar */
+  width: calc(100% - 270px);
+  overflow: hidden; /* Prevent unwanted scroll on the entire content */
 `;
 
 export const ProfilePic = styled.img`
   height: 40px;
   border-radius: 50%;
-  font-size:"20px"
-  margin-left: 80px;
   cursor: pointer;
 `;
 
 export const NotificationIcon = styled.span`
   cursor: pointer;
-  margin-right: 10px;
-  position: relative;
-  right: -310px;
   font-size: 22px;
-  bottom: -4px;
-  color: #1a8797;
+  color: #2a3042;
 `;
 
 export const DropdownIcon = styled.span`
   margin-left: 5px;
-  position: relative;
-  top: -6px;
   cursor: pointer;
-  font-size: 44px;
+  font-size: 24px;
+  color: #2a3042;
 `;
 
 interface HeadingProps {
-  isDashboard?: boolean; // Define the prop
+  isDashboard?: boolean;
 }
 
 export const Heading = styled.h1<HeadingProps>`
-  @apply text-4xl font-extrabold text-center mt-8 mb-4 tracking-tight;
+  font-size: 24px;
+  font-weight: bold;
+  color: #2a3042;
+  margin-bottom: 20px;
+`;
 
-  /* Conditional Background */
-  background: ${(props) => (props.isDashboard ? "#333333" : "#3b82f6")};
-  -webkit-background-clip: text;
-  color: transparent;
+export const SidebarHeader = styled.div`
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
 
-  /* Conditional Text Shadow */
-  text-shadow: ${(props) =>
-    props.isDashboard
-      ? "0 4px 6px rgba(255, 255, 255, 0.2)"
-      : "0 4px 6px rgba(0, 0, 0, 0.1)"};
+export const SidebarText = styled.span`
+  flex-grow: 1;
+  font-size: 14px;
+`;
+
+export const SidebarBadge = styled.span`
+  background-color: #0acf97;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 10px;
+  margin-left: 10px;
+`;
+
+export const SidebarScrollWrapper = styled.div`
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  padding-bottom: 20px;
+
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+`;
+
+// Update these existing components for tighter spacing:
+export const SidebarItem = styled.li`
+  margin: 4px 0;
+`;
+
+export const SidebarIcon = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  font-size: 16px;
+  opacity: 0.8;
+`;
+
+export const SidebarDivider = styled.div`
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin: 10px 20px;
+`;
+
+export const SidebarSectionTitle = styled.div`
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 20px;
+  margin-top: 5px;
+`;
+
+export const SidebarLink = styled(Link)`
+  text-decoration: none;
+  color: #ffffff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+  margin: 0 10px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+
+    ${SidebarIcon} {
+      opacity: 1;
+    }
+  }
+
+  &.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    font-weight: 500;
+
+    ${SidebarIcon} {
+      opacity: 1;
+    }
+  }
 `;

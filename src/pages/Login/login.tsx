@@ -1,159 +1,253 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../services/authService";
+import { toast } from "react-toastify";
+import axios from "axios";
+import {
+  requestNotificationPermission,
+  onForegroundMessage,
+  refreshFcmToken,
+} from "../../utils/firebase";
+import { API_URL } from "../../services/brandService";
+
+interface LoginResponse {
+  token: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    address: string;
+    isVerified: boolean;
+  };
+}
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isTokenFound, setTokenFound] = useState(false); // Track notification permission
+  const [notification, setNotification] = useState({ title: "", body: "" }); // Store notification data
+
+  // Request notification permission and handle foreground messages
+  useEffect(() => {
+    // Request FCM token
+    requestNotificationPermission()
+      .then((token) => {
+        if (token) {
+          setTokenFound(true);
+          toast.success("Push notifications enabled!");
+        } else {
+          setTokenFound(false);
+          toast.warn("Please enable notifications in your browser settings");
+        }
+      })
+      .catch((error) => {
+        console.error("Error requesting notification permission:", error);
+        setTokenFound(false);
+        toast.error("Failed to enable push notifications");
+      });
+
+    // Listen for foreground messages
+    onForegroundMessage((payload) => {
+      console.log("Foreground message received:", payload);
+      const { notification: { title, body } = {} } = payload;
+      setNotification({ title: title || "New Notification", body: body || "" });
+      toast.info(
+        <div>
+          <strong>{title || "New Notification"}</strong>
+          <p>{body || ""}</p>
+        </div>,
+        {
+          autoClose: 5000,
+          closeOnClick: true,
+          pauseOnHover: true,
+        }
+      );
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const body = { email, password };
+    setIsLoading(true);
+    setError("");
 
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
+      // 1. Perform login
+      const response = await loginUser(email, password);
+      const data: LoginResponse = response.data || response;
+
+      if (!data?.user?._id) {
+        throw new Error("Invalid user data received from server");
+      }
+
+      // 2. Store auth data
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      toast.success("Login successful!");
+
+      // 3. Handle FCM token
+      await handleFcmToken(data.token, data.user._id, data.user.address);
+      navigate("/users");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleFcmToken = async (
+    token: string,
+    userId: string,
+    address: string
+  ) => {
+    try {
+      const fcmToast = toast.loading("Setting up push notifications...");
+      const fcmToken = await refreshFcmToken();
+
+      if (!fcmToken) {
+        toast.update(fcmToast, {
+          render: "Notifications permission not granted",
+          type: "warning",
+          isLoading: false,
+          autoClose: 3000,
+        });
+        throw new Error("Notification permission denied");
+      }
+
+      toast.update(fcmToast, {
+        render: "Registering device for notifications...",
+        type: "info",
+        isLoading: true,
       });
 
-      const data = await response.json();
+      const response = await axios.put(
+        `${API_URL}/user/${userId}/fcm-token`,
+        { fcmToken, address },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 10000,
+        }
+      );
+      console.log("FCM token update response:", response.data);
 
-      if (response.ok) {
-        localStorage.setItem("token", data.token);
+      toast.update(fcmToast, {
+        render: "Push notifications enabled!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
 
-        navigate("/users");
-      } else {
-        setError(data.message);
-      }
-    } catch (err) {
-      console.error("Login failed", err);
-      setError("An error occurred. Please try again.");
+      return response.data;
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to enable notifications";
+      toast.error(errorMessage, { autoClose: 5000 });
+      throw error;
     }
   };
 
   return (
-    <main className="form-signin">
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div
-        className="container"
-        style={{
-          borderRadius: "15px",
-          padding: "40px 30px",
-          maxWidth: "450px",
-          margin: "auto",
-          height: "90vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
-        }}
+        className="card shadow-sm p-4"
+        style={{ width: "100%", maxWidth: "400px" }}
       >
-        <form
-          className="form-signin"
-          style={{
-            width: "100%",
-            margin: "auto",
-            transition: "transform 0.3s ease-in-out",
-            boxSizing: "border-box",
-          }}
-          onSubmit={handleSubmit}
-        >
-          <h1
-            className="h3 mb-4 fw-normal text-center"
-            style={{
-              color: "#000",
-              fontFamily: "'Poppins', sans-serif",
-              letterSpacing: "1px",
-              fontWeight: "bold",
-              textShadow: "2px 2px 4px rgba(7, 7, 7, 0.4)",
-              transition: "color 0.5s ease",
-            }}
-          >
-            Please sign in
-          </h1>
+        <div className="card-body">
+          <h2 className="text-center mb-4">Sign In</h2>
 
-          <div className="form-group mb-4">
-            <label
-              htmlFor="floatingInput"
-              style={{ fontWeight: "bold", fontSize: "1.1rem" }}
-            >
-              Email address
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              id="floatingInput"
-              aria-label="Email address"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ marginTop: "5px", padding: "15px", fontSize: "1.1rem" }}
-            />
+          {error && (
+            <div className="alert alert-danger mb-3" role="alert">
+              {error}
+            </div>
+          )}
+
+          {/* Display notification permission status */}
+          <div className="text-center mb-3">
+            {isTokenFound ? (
+              <span className="text-success">
+                Notification permission enabled 👍
+              </span>
+            ) : (
+              <span className="text-warning">
+                Need notification permission ❗
+              </span>
+            )}
           </div>
 
-          <div className="form-group mb-4">
-            <label
-              htmlFor="floatingPassword"
-              style={{ fontWeight: "bold", fontSize: "1.1rem" }}
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              className="form-control"
-              id="floatingPassword"
-              aria-label="Password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{ marginTop: "5px", padding: "15px", fontSize: "1.1rem" }}
-            />
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label htmlFor="email" className="form-label">
+                Email address
+              </label>
+              <input
+                type="email"
+                className="form-control"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
 
-          {error && <div className="alert alert-danger">{error}</div>}
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <input
+                type="password"
+                className="form-control"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
 
-          <div className="form-check text-start my-3">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              value="remember-me"
-              id="flexCheckDefault"
-              style={{
-                transform: "scale(1.2)",
-                transition: "transform 0.2s ease-in-out",
-              }}
-            />
-            <label className="form-check-label" htmlFor="flexCheckDefault">
-              Remember me
-            </label>
-          </div>
+            <div className="d-grid gap-2 mb-3">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span>
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </div>
 
-          <button
-            className="btn btn-primary w-100 py-3"
-            type="submit"
-            style={{
-              fontSize: "16px",
-              letterSpacing: "1px",
-              borderRadius: "10px",
-              transition: "background 0.3s, transform 0.3s",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = "scale(1.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = "scale(1)";
-            }}
-          >
-            Sign in
-          </button>
-        </form>
+            <div className="text-center">
+              <a href="/forgot-password" className="text-decoration-none">
+                Forgot password?
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
-    </main>
+    </div>
   );
 };
 
