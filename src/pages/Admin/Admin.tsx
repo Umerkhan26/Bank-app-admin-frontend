@@ -86,7 +86,14 @@ const Admin: React.FC = () => {
                   <SidebarText>Users</SidebarText>
                 </SidebarLink>
               </SidebarItem>
-
+ <SidebarItem>
+                <SidebarLink to="/usersRedeemDetails">
+                  <SidebarIcon>
+                    <FaUsers />
+                  </SidebarIcon>
+                  <SidebarText>User Redeem Details</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
               <SidebarItem>
                 <SidebarLink to="/brand">
                   <SidebarIcon>
@@ -150,7 +157,14 @@ const Admin: React.FC = () => {
                   <SidebarText>Bank Premium</SidebarText>
                 </SidebarLink>
               </SidebarItem>
-
+ <SidebarItem>
+                <SidebarLink to="/bank-premium-redeem-details">
+                  <SidebarIcon>
+                    <AiOutlineDashboard />
+                  </SidebarIcon>
+                  <SidebarText>Bank Premium Redeem Details</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
               <SidebarItem>
                 <SidebarLink to="/settings">
                   <SidebarIcon>

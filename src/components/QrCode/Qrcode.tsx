@@ -4,6 +4,7 @@ import { Modal, Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
 import Select from "react-select";
+import Papa from "papaparse"; // ✅ CSV parser
 
 import {
   Container,
@@ -16,6 +17,7 @@ import {
 
 import { QRCode, QRCodeResponse, Brand } from "../../type";
 import {
+  bulkUploadQRCodes,
   createqrcodeData,
   deleteQRCodeData,
   getqrcodeData,
@@ -32,6 +34,7 @@ const Qrcode: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [qrcodeId, setqrcodeId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState<QRCode>({
     code: "",
@@ -150,23 +153,36 @@ const Qrcode: React.FC = () => {
     }
   };
 
+  // ✅ CSV Import
+// ✅ CSV Import using bulkUploadQRCodes API
+const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  setLoading(true);
+  try {
+    const result = await bulkUploadQRCodes(file); // call your API function
+
+    // Check backend response
+    if (result && result.message) {
+      toast.success(result.message); // show "X QR codes inserted successfully"
+    } else {
+      toast.error("No QR codes inserted.");
+    }
+  } catch (error: any) {
+    toast.error(error.message || "Error uploading CSV.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const filteredQRCodes = qrcode.filter((qr) =>
+  qr.code.toLowerCase().includes(searchTerm.toLowerCase())
+);
   const columns = [
-    {
-      Header: "ID",
-      accessor: (_: any, index: number) => index + 1,
-      disableFilters: true,
-      width: 50,
-    },
-    {
-      Header: "Code",
-      accessor: "code",
-      width: 150,
-    },
-    {
-      Header: "Points",
-      accessor: "points",
-      width: 100,
-    },
+    { Header: "ID", accessor: (_: any, index: number) => index + 1, width: 50 },
+    { Header: "Code", accessor: "code", width: 150 },
+    { Header: "Points", accessor: "points", width: 100 },
     {
       Header: "Status",
       accessor: "isUsed",
@@ -178,13 +194,9 @@ const Qrcode: React.FC = () => {
       accessor: "brand",
       Cell: ({ value }: { value: string | Brand | null }) => {
         if (value === null) return "N/A";
-
-        // If it's a populated Brand object
         if (typeof value === "object" && "brandName" in value) {
           return value.brandName;
         }
-
-        // If it's just an ID string, find in brands list
         const brand = brands.find((b) => b._id === value);
         return brand?.brandName || "N/A";
       },
@@ -215,20 +227,7 @@ const Qrcode: React.FC = () => {
 
   if (loading) {
     return (
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          backgroundColor: "rgba(255, 255, 255, 0.6)",
-          zIndex: 9999,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <div className="loading-overlay">
         <ClipLoader size={40} color="#1a8797" />
       </div>
     );
@@ -242,8 +241,13 @@ const Qrcode: React.FC = () => {
           <UserCount>({qrcode.length})</UserCount>
         </div>
         <div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <SearchInput type="text" placeholder="Search QR Codes..." />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+<SearchInput
+  type="text"
+  placeholder="Search QR Codes..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+/>
             <AddUserButton
               onClick={() => {
                 setIsEditing(false);
@@ -253,8 +257,32 @@ const Qrcode: React.FC = () => {
             >
               Add QR Code
             </AddUserButton>
-          </div>
 
+            {/* ✅ CSV Import Button */}
+            <label className="btn btn-success" style={{ marginLeft: "10px" }}>
+              Import CSV
+              <input
+                type="file"
+                accept=".csv"
+                hidden
+                onChange={handleCSVUpload}
+              />
+            </label>
+          </div>
+<div
+  style={{
+    fontFamily: "monospace",
+    fontSize: "14px",
+    margin: "10px 0",
+    padding: "5px 10px",
+    backgroundColor: "#f5f5f5",
+    borderRadius: "5px",
+    display: "inline-block",
+  }}
+>
+  Total QR Codes: {qrcode.length} | Used: {qrcode.filter(q => q.isUsed).length} | Unused: {qrcode.filter(q => !q.isUsed).length}
+</div>
+          {/* Existing Modal */}
           <Modal show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton>
               <Modal.Title style={{ color: "#1a8797" }}>
@@ -333,7 +361,9 @@ const Qrcode: React.FC = () => {
 
       <TableContainer
         columns={columns}
-        data={qrcode}
+  data={filteredQRCodes} // now only matching QR codes appear
+
+        // data={qrcode}
         isPagination
         iscustomPageSize
         className="table-responsive"

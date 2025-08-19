@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Modal, Form } from "react-bootstrap";
+import { Modal, Form, Tabs, Tab } from "react-bootstrap";
 import { toast } from "react-toastify";
 import Select from "react-select";
+import Papa from "papaparse"; // <-- CSV parsing
 import {
   Container,
   HeaderSection,
@@ -56,6 +57,9 @@ const Store: React.FC = () => {
     brand: "",
   });
 
+  const [activeTab, setActiveTab] = useState("manual");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -64,11 +68,9 @@ const Store: React.FC = () => {
           getStoresData(),
           getAllBrands(),
         ]);
-        console.log("📦 Stores Data:", storesData);
         setStores(storesData.stores);
         setBrands(brandsData);
       } catch (error) {
-        console.error("Error fetching data:", error);
         setError(
           error instanceof Error ? error : new Error("Failed to fetch data")
         );
@@ -152,11 +154,62 @@ const Store: React.FC = () => {
       setIsEditing(false);
       handleCloseModal();
     } catch (error) {
-      console.error("Error submitting store:", error);
       toast.error("Error submitting the store. Please try again later.");
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // --- CSV Upload Handler ---
+  const handleCSVUpload = () => {
+    if (!csvFile) {
+      toast.error("Please select a CSV file first!");
+      return;
+    }
+
+    Papa.parse(csvFile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const rows: any[] = results.data;
+        if (!rows.length) {
+          toast.error("CSV file is empty!");
+          return;
+        }
+
+        setIsSaving(true);
+        try {
+          for (const row of rows) {
+            if (
+              !row.storeName ||
+              !row.description ||
+              !row.latitude ||
+              !row.longitude ||
+              !row.brand
+            ) {
+              continue; // skip invalid row
+            }
+
+            const storeData = {
+              storeName: row.storeName,
+              description: row.description,
+              latitude: row.latitude,
+              longitude: row.longitude,
+              brand: row.brand,
+            };
+
+            const storeResponse = await createStoreData(storeData);
+            setStores((prev) => [...prev, storeResponse.store]);
+          }
+          toast.success("CSV imported successfully!");
+          handleCloseModal();
+        } catch (error) {
+          toast.error("Error importing CSV data!");
+        } finally {
+          setIsSaving(false);
+        }
+      },
+    });
   };
 
   const handleDeleteStore = async (store: { _id: string }) => {
@@ -169,7 +222,6 @@ const Store: React.FC = () => {
       toast.success("Store deleted successfully!");
       setStores((prevStores) => prevStores.filter((s) => s._id !== store._id));
     } catch (error) {
-      console.error("Error deleting store:", error);
       toast.error("Error deleting store!");
     } finally {
       setIsDeleting(false);
@@ -236,12 +288,6 @@ const Store: React.FC = () => {
           <button
             onClick={() => handleDeleteStore(row.original)}
             className="btn btn-danger"
-            style={{
-              padding: "5px 8px",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
             disabled={isDeleting}
           >
             {isDeleting && deletingId === row.original._id ? (
@@ -253,12 +299,6 @@ const Store: React.FC = () => {
           <button
             onClick={() => handleEditStore(row.original)}
             className="btn btn-secondary"
-            style={{
-              padding: "5px 15px",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
             disabled={isDeleting || isSaving}
           >
             Edit
@@ -345,92 +385,138 @@ const Store: React.FC = () => {
               </Modal.Header>
 
               <Modal.Body>
-                <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="storeName"
-                      value={formData.storeName}
-                      onChange={handleChange}
-                      placeholder="Enter store name"
+                <Tabs
+                  activeKey={activeTab}
+                  onSelect={(k) => setActiveTab(k || "manual")}
+                >
+                  {/* Manual Entry Form */}
+                  <Tab eventKey="manual" title="Manual Entry">
+                    <Form onSubmit={handleSubmit}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Name</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="storeName"
+                          value={formData.storeName}
+                          onChange={handleChange}
+                          placeholder="Enter store name"
+                          disabled={isSaving}
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label>Description</Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="description"
+                          value={formData.description}
+                          onChange={handleChange}
+                          rows={3}
+                          placeholder="Enter store description"
+                          disabled={isSaving}
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label>Latitude</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="latitude"
+                          value={formData.latitude || ""}
+                          onChange={handleChange}
+                          placeholder="Enter latitude"
+                          min="-90"
+                          max="90"
+                          step="0.000001"
+                          disabled={isSaving}
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label>Longitude</Form.Label>
+                        <Form.Control
+                          type="number"
+                          name="longitude"
+                          value={formData.longitude || ""}
+                          onChange={handleChange}
+                          placeholder="Enter longitude"
+                          min="-180"
+                          max="180"
+                          step="0.000001"
+                          disabled={isSaving}
+                        />
+                      </Form.Group>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label>Brand</Form.Label>
+                        <Select
+                          options={brands.map((brand) => ({
+                            value: brand._id,
+                            label: brand.brandName,
+                          }))}
+                          value={brands
+                            .map((brand) => ({
+                              value: brand._id,
+                              label: brand.brandName,
+                            }))
+                            .find(
+                              (option) => option.value === formData.brand
+                            )}
+                          onChange={handleBrandChange}
+                          isSearchable
+                          placeholder="Select a brand"
+                          isDisabled={isSaving}
+                        />
+                      </Form.Group>
+
+                      <AddUserButton type="submit" disabled={isSaving}>
+                        {isSaving ? (
+                          <ClipLoader size={15} color="#fff" />
+                        ) : isEditing ? (
+                          "Update Store"
+                        ) : (
+                          "Save Store"
+                        )}
+                      </AddUserButton>
+                    </Form>
+                  </Tab>
+
+                  {/* CSV Upload Form */}
+                  <Tab eventKey="csv" title="Import via CSV">
+                    <Form.Group className="mb-3">
+                      <Form.Label>Upload CSV</Form.Label>
+                      <Form.Control
+                        type="file"
+                        accept=".csv"
+                        onChange={(e) =>
+                          setCsvFile(e.target.files?.[0] || null)
+                        }
+                        disabled={isSaving}
+                      />
+                      <small>
+                        <a
+                          href="/sample-stores.csv"
+                          download
+                          style={{ color: "#1a8797" }}
+                        >
+                          Download Sample CSV
+                        </a>
+                      </small>
+                    </Form.Group>
+
+                    <AddUserButton
+                      type="button"
+                      onClick={handleCSVUpload}
                       disabled={isSaving}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Description</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleChange}
-                      rows={3}
-                      placeholder="Enter store description"
-                      disabled={isSaving}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Latitude</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="latitude"
-                      value={formData.latitude || ""}
-                      onChange={handleChange}
-                      placeholder="Enter latitude"
-                      min="-90"
-                      max="90"
-                      step="0.000001"
-                      disabled={isSaving}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Longitude</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="longitude"
-                      value={formData.longitude || ""}
-                      onChange={handleChange}
-                      placeholder="Enter longitude"
-                      min="-180"
-                      max="180"
-                      step="0.000001"
-                      disabled={isSaving}
-                    />
-                  </Form.Group>
-
-                  <Form.Group className="mb-3">
-                    <Form.Label>Brand</Form.Label>
-                    <Select
-                      options={brands.map((brand) => ({
-                        value: brand._id,
-                        label: brand.brandName,
-                      }))}
-                      value={brands
-                        .map((brand) => ({
-                          value: brand._id,
-                          label: brand.brandName,
-                        }))
-                        .find((option) => option.value === formData.brand)}
-                      onChange={handleBrandChange}
-                      isSearchable
-                      placeholder="Select a brand"
-                      isDisabled={isSaving}
-                    />
-                  </Form.Group>
-
-                  <AddUserButton type="submit" disabled={isSaving}>
-                    {isSaving ? (
-                      <ClipLoader size={15} color="#fff" />
-                    ) : isEditing ? (
-                      "Update Store"
-                    ) : (
-                      "Save Store"
-                    )}
-                  </AddUserButton>
-                </Form>
+                    >
+                      {isSaving ? (
+                        <ClipLoader size={15} color="#fff" />
+                      ) : (
+                        "Upload CSV"
+                      )}
+                    </AddUserButton>
+                  </Tab>
+                </Tabs>
               </Modal.Body>
             </Modal>
           </div>

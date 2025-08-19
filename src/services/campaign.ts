@@ -174,3 +174,44 @@ export const deleteCampaignData = async (campaignId: string) => {
     throw error;
   }
 };
+
+
+export interface LeaderboardUser {
+  userId: string;
+  username: string;
+  redemptionCount: number;
+}
+
+export interface CampaignWithLeaderboard {
+  _id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  image: string | null;
+  isActive: boolean;
+  brand: string | { _id: string; brandName: string };
+  leaderboard: LeaderboardUser[];
+}
+
+// Fetch campaigns along with their leaderboard
+export const fetchCampaignsWithLeaderboard = async (): Promise<CampaignWithLeaderboard[]> => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authorization token is missing");
+  }
+
+  try {
+    const response = await axios.get(`${API_URL}/campaign-with-user-history`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("response from leaderBoard", response)
+    return response.data; // should return array of CampaignWithLeaderboard
+  } catch (error) {
+    console.error("Error fetching campaigns with leaderboard:", error);
+    throw error;
+  }
+};

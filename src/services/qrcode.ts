@@ -91,3 +91,34 @@ export const deleteQRCodeData = async (qrCodeId: string) => {
     throw error;
   }
 };
+
+
+export const bulkUploadQRCodes = async (file: File) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authorization token is missing");
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post(`${API_URL}/qrcodes/upload`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    console.log("response from qr code csv ", response)
+    return response.data;
+  } catch (error: any) {
+    console.error("Error uploading QR codes:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        error.response.data.message || "Failed to upload QR codes"
+      );
+    }
+    throw new Error("Failed to upload QR codes");
+  }
+};
