@@ -82,6 +82,9 @@ const Login: React.FC = () => {
       if (!data?.user?._id) {
         throw new Error("Invalid user data received from server");
       }
+      if ((data as any).user.userRole !== "admin") {
+        throw new Error("Access denied! Only admins are allowed to log in.");
+      }
 
       // 2. Store auth data
       localStorage.setItem("token", data.token);
@@ -186,11 +189,11 @@ const Login: React.FC = () => {
           <div className="text-center mb-3">
             {isTokenFound ? (
               <span className="text-success">
-                Notification permission enabled 👍
+                {/* Notification permission enabled 👍 */}
               </span>
             ) : (
               <span className="text-warning">
-                Need notification permission ❗
+                {/* Need notification permission ❗ */}
               </span>
             )}
           </div>

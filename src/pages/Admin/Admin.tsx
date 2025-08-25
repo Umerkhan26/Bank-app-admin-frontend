@@ -38,6 +38,7 @@ import { IoNotifications } from "react-icons/io5";
 import { FaUsers } from "react-icons/fa";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { checkAuth, logout } from "../../utils/authUtils";
+import logo from "../../assets/BANKS CURVED LOGO-09.png";
 
 const Admin: React.FC = () => {
   const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -63,7 +64,19 @@ const Admin: React.FC = () => {
       <AdminLayoutContainer>
         <Sidebar width="270px" bgColor="#2a3042">
           <SidebarHeader>
-            <Logo>ADMIN PANEL</Logo>
+            <Logo>
+              {" "}
+              <img
+                src={logo}
+                alt="BankApp Logo"
+                style={{
+                  maxHeight: "90px",
+                  width: "auto",
+                  marginLeft: "17px",
+                  cursor: "pointer",
+                }}
+              />
+            </Logo>
           </SidebarHeader>
 
           <SidebarScrollWrapper>

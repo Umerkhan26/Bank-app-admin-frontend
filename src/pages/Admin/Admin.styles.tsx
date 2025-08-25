@@ -37,7 +37,7 @@ export const Logo = styled.div`
   font-size: 24px;
   font-weight: bold;
   color: #ffffff;
-  padding: 10px 20px;
+  padding: 6px 15px;
   border-bottom: 1px solid #3b4b66;
 `;
 
@@ -156,7 +156,7 @@ export const Heading = styled.h1<HeadingProps>`
 `;
 
 export const SidebarHeader = styled.div`
-  padding: 20px;
+  padding: 15px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 

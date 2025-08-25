@@ -1,6 +1,7 @@
 import axios from "axios";
 
-export const API_URL = "http://localhost:3000/api";
+// export const API_URL = "http://localhost:3000/api";
+export const API_URL = import.meta.env.VITE_API_URL;
 
 export const createBrand = async (formData: FormData) => {
   const res = await axios.post(`${API_URL}/Createbrand`, formData, {
@@ -14,7 +15,7 @@ export const createBrand = async (formData: FormData) => {
 export const getAllBrands = async () => {
   try {
     const response = await axios.get(`${API_URL}/getAllBrands`);
-    console.log("response from create brand", response)
+    console.log("response from create brand", response);
     return response.data.brands;
   } catch (error) {
     console.error("Error fetching brands:", error);
