@@ -175,27 +175,31 @@ export const deleteCampaignData = async (campaignId: string) => {
   }
 };
 
-
 export interface LeaderboardUser {
   userId: string;
-  username: string;
-  redemptionCount: number;
+  username?: string;
+  fullName?: string;
+  email?: string;
+  totalRedeems?: number;
+  lastRedeemedAt?: string;
+  redemptionCount?: number;
 }
-
 export interface CampaignWithLeaderboard {
   _id: string;
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   image: string | null;
   isActive: boolean;
   brand: string | { _id: string; brandName: string };
   leaderboard: LeaderboardUser[];
+  points_required: number;
 }
 
-// Fetch campaigns along with their leaderboard
-export const fetchCampaignsWithLeaderboard = async (): Promise<CampaignWithLeaderboard[]> => {
+export const fetchCampaignsWithLeaderboard = async (): Promise<
+  CampaignWithLeaderboard[]
+> => {
   const token = localStorage.getItem("token");
 
   if (!token) {
@@ -208,7 +212,7 @@ export const fetchCampaignsWithLeaderboard = async (): Promise<CampaignWithLeade
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("response from leaderBoard", response)
+    console.log("response from leaderBoard", response);
     return response.data; // should return array of CampaignWithLeaderboard
   } catch (error) {
     console.error("Error fetching campaigns with leaderboard:", error);

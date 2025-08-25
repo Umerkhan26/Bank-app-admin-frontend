@@ -15,7 +15,7 @@ import {
   AddUserButton,
 } from "../users/User.Styles";
 import { getStoresData } from "../../services/store";
-import { Promotions, PromotionTable } from "../../type";
+import { Promotions, PromotionTable, Stores } from "../../type";
 import {
   createPromotionData,
   deletePromotionData,
@@ -80,10 +80,12 @@ const Promotion: React.FC = () => {
         ]);
 
         if (Array.isArray(storesResponse.stores)) {
-          const extractedStores = storesResponse.stores.map((store) => ({
-            _id: store._id,
-            storeName: store.storeName,
-          }));
+          const extractedStores = storesResponse.stores.map(
+            (store: Stores) => ({
+              _id: store._id,
+              storeName: store.storeName,
+            })
+          );
           setStores(extractedStores);
         }
 

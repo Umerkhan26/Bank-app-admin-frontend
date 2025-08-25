@@ -1,16 +1,17 @@
 import React from "react";
 import { Input } from "reactstrap";
-import { ColumnInstance, Row } from "react-table";
+import { ColumnInstance, Row, UseFiltersColumnProps } from "react-table";
 
 // For Filter wrapper component
-interface FilterProps<T extends object> {
-  column: ColumnInstance<T>;
-}
+
+type FilterProps<T extends object> = {
+  column: ColumnInstance<T> & UseFiltersColumnProps<T>;
+};
 
 export const Filter = <T extends object>({ column }: FilterProps<T>) => {
   return (
     <div style={{ marginTop: 5 }}>
-      {column.canFilter && column.render("Filter")}
+      {column.canFilter ? column.render("Filter") : null}
     </div>
   );
 };

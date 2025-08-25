@@ -4,7 +4,6 @@ import { Modal, Form } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
 import Select from "react-select";
-import Papa from "papaparse"; // ✅ CSV parser
 
 import {
   Container,
@@ -25,6 +24,7 @@ import {
 } from "../../services/qrcode";
 import { getAllBrands } from "../../services/brandService";
 import TableContainer from "../TabConatiner/TableConatiner";
+import { CellProps, Column } from "react-table";
 
 const Qrcode: React.FC = () => {
   const [qrcode, setQrCodes] = useState<QRCode[]>([]);
@@ -34,7 +34,7 @@ const Qrcode: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [qrcodeId, setqrcodeId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [formData, setFormData] = useState<QRCode>({
     code: "",
@@ -100,11 +100,11 @@ const [searchTerm, setSearchTerm] = useState("");
       return;
     }
 
-    const payload: QRCode = {
+    const payload = {
       code,
       points: typeof points === "string" ? parseInt(points) : points,
       isUsed,
-      brand,
+      brand: typeof brand === "object" && brand !== null ? brand._id : brand,
     };
 
     try {
@@ -154,45 +154,59 @@ const [searchTerm, setSearchTerm] = useState("");
   };
 
   // ✅ CSV Import
-// ✅ CSV Import using bulkUploadQRCodes API
-const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
+  // ✅ CSV Import using bulkUploadQRCodes API
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  setLoading(true);
-  try {
-    const result = await bulkUploadQRCodes(file); // call your API function
+    setLoading(true);
+    try {
+      const result = await bulkUploadQRCodes(file); // call your API function
 
-    // Check backend response
-    if (result && result.message) {
-      toast.success(result.message); // show "X QR codes inserted successfully"
-    } else {
-      toast.error("No QR codes inserted.");
+      // Check backend response
+      if (result && result.message) {
+        toast.success(result.message); // show "X QR codes inserted successfully"
+      } else {
+        toast.error("No QR codes inserted.");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error uploading CSV.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    toast.error(error.message || "Error uploading CSV.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-const filteredQRCodes = qrcode.filter((qr) =>
-  qr.code.toLowerCase().includes(searchTerm.toLowerCase())
-);
-  const columns = [
-    { Header: "ID", accessor: (_: any, index: number) => index + 1, width: 50 },
-    { Header: "Code", accessor: "code", width: 150 },
-    { Header: "Points", accessor: "points", width: 100 },
+  const filteredQRCodes = qrcode.filter((qr) =>
+    qr.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const columns: Column<QRCode>[] = [
+    {
+      Header: "ID",
+      id: "rowNumber", // 👈 give it a unique id
+      Cell: ({ row }: CellProps<QRCode>) => row.index + 1,
+      width: 50,
+    },
+    {
+      Header: "Code",
+      accessor: "code",
+      width: 150,
+    },
+    {
+      Header: "Points",
+      accessor: "points",
+      width: 100,
+    },
     {
       Header: "Status",
       accessor: "isUsed",
-      Cell: ({ value }: { value: boolean }) => (value ? "Used" : "Not Used"),
+      Cell: ({ value }: CellProps<QRCode, boolean>) =>
+        value ? "Used" : "Not Used",
       width: 100,
     },
     {
       Header: "Brand",
       accessor: "brand",
-      Cell: ({ value }: { value: string | Brand | null }) => {
+      Cell: ({ value }: CellProps<QRCode, string | Brand>) => {
         if (value === null) return "N/A";
         if (typeof value === "object" && "brandName" in value) {
           return value.brandName;
@@ -204,8 +218,8 @@ const filteredQRCodes = qrcode.filter((qr) =>
     },
     {
       Header: "Actions",
-      accessor: "_id",
-      Cell: ({ row }: { row: { original: QRCode } }) => (
+      id: "actions", // 👈 needs an id because no accessor
+      Cell: ({ row }: CellProps<QRCode>) => (
         <div style={{ display: "flex", gap: "5px" }}>
           <button
             className="btn btn-danger"
@@ -242,12 +256,12 @@ const filteredQRCodes = qrcode.filter((qr) =>
         </div>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-<SearchInput
-  type="text"
-  placeholder="Search QR Codes..."
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-/>
+            <SearchInput
+              type="text"
+              placeholder="Search QR Codes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <AddUserButton
               onClick={() => {
                 setIsEditing(false);
@@ -269,19 +283,21 @@ const filteredQRCodes = qrcode.filter((qr) =>
               />
             </label>
           </div>
-<div
-  style={{
-    fontFamily: "monospace",
-    fontSize: "14px",
-    margin: "10px 0",
-    padding: "5px 10px",
-    backgroundColor: "#f5f5f5",
-    borderRadius: "5px",
-    display: "inline-block",
-  }}
->
-  Total QR Codes: {qrcode.length} | Used: {qrcode.filter(q => q.isUsed).length} | Unused: {qrcode.filter(q => !q.isUsed).length}
-</div>
+          <div
+            style={{
+              fontFamily: "monospace",
+              fontSize: "14px",
+              margin: "10px 0",
+              padding: "5px 10px",
+              backgroundColor: "#f5f5f5",
+              borderRadius: "5px",
+              display: "inline-block",
+            }}
+          >
+            Total QR Codes: {qrcode.length} | Used:{" "}
+            {qrcode.filter((q) => q.isUsed).length} | Unused:{" "}
+            {qrcode.filter((q) => !q.isUsed).length}
+          </div>
           {/* Existing Modal */}
           <Modal show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton>
@@ -361,8 +377,7 @@ const filteredQRCodes = qrcode.filter((qr) =>
 
       <TableContainer
         columns={columns}
-  data={filteredQRCodes} // now only matching QR codes appear
-
+        data={filteredQRCodes} // now only matching QR codes appear
         // data={qrcode}
         isPagination
         iscustomPageSize

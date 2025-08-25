@@ -124,13 +124,13 @@ export const onForegroundMessage = (
   callback: (payload: MessagePayload) => void
 ) => {
   console.log("[FIREBASE] Setting up foreground message listener");
-  messagingPromise.then((messagingInstance) => {
+
+  return messagingPromise.then((messagingInstance: Messaging | null) => {
     if (messagingInstance) {
-      onMessage(messagingInstance, (payload) => {
+      const unsubscribe = onMessage(messagingInstance, (payload) => {
         console.log("[FIREBASE] Foreground message received:", payload);
         callback(payload);
 
-        // Show notification even in foreground
         if (payload.notification) {
           new Notification(payload.notification.title || "New Notification", {
             body: payload.notification.body,
@@ -138,7 +138,12 @@ export const onForegroundMessage = (
           });
         }
       });
+
+      return unsubscribe;
     }
+
+    // if no messaging instance, return a no-op unsubscribe
+    return () => {};
   });
 };
 

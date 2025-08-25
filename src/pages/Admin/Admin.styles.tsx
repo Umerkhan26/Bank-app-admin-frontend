@@ -260,3 +260,16 @@ export const SidebarLink = styled(Link)`
     }
   }
 `;
+
+export const SidebarDisabled = styled.div`
+  text-decoration: none;
+  color: #aaa;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+  border-radius: 4px;
+  margin: 0 10px;
+  cursor: not-allowed;
+  opacity: 0.6;
+`;

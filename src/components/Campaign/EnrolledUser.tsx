@@ -90,20 +90,29 @@
 // };
 
 // export default EnrolledUsersModal;
+
 import React from "react";
 import { useLocation } from "react-router-dom"; // Adjust the path as needed
 import TableContainer from "../TabConatiner/TableConatiner";
+import { Column } from "react-table";
+
+interface IUser {
+  id: string;
+  name: string;
+  disableFilters: string;
+}
 
 const EnrolledUsersPage: React.FC = () => {
   const location = useLocation();
   const { enrolledUsers = [] } = location.state || {};
 
   // Define columns for the table
-  const columns = [
+  const columns: Column<IUser>[] = [
     {
       Header: "#",
-      accessor: (row: any, index: number) => index + 1,
-      disableFilters: true,
+      id: "rowNumber",
+      Cell: ({ row }) => row.index + 1,
+      // disableFilters: true,
       width: 50,
     },
     {

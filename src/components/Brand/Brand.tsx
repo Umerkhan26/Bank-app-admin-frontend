@@ -37,6 +37,7 @@ const Brand: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStatusChanging, setIsStatusChanging] = useState(false);
@@ -127,6 +128,7 @@ const Brand: React.FC = () => {
     try {
       setIsStatusChanging(true);
       const response = await updateBrandStatus(id, !currentStatus);
+      console.log("first", response);
       setBrands((prev) =>
         prev.map((brand) =>
           brand._id === id ? { ...brand, isActive: !currentStatus } : brand
@@ -141,9 +143,13 @@ const Brand: React.FC = () => {
     }
   };
 
-  const totalItems = brands.length;
+  const filteredBrands = brands.filter((brand) =>
+    brand.brandName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalItems = filteredBrands.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedBrands = brands.slice(
+  const paginatedBrands = filteredBrands.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -312,6 +318,22 @@ const Brand: React.FC = () => {
       )}
 
       <Container>
+        {error && (
+          <div
+            style={{
+              color: "red",
+              background: "#ffe6e6",
+              padding: "10px",
+              marginTop: "10px",
+              border: "1px solid red",
+              borderRadius: "4px",
+              textAlign: "center",
+            }}
+          >
+            {error.message}
+          </div>
+        )}
+
         <HeaderSection>
           <div>
             <Title>All Brands</Title>
@@ -321,7 +343,11 @@ const Brand: React.FC = () => {
             <SearchInput
               type="text"
               placeholder="Search brands..."
-              onChange={(e) => console.log(e)}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
             />
             <AddUserButton
               onClick={() => {

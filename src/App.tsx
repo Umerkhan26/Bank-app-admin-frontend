@@ -49,36 +49,22 @@ axios.interceptors.response.use(
 
 function App() {
   useEffect(() => {
-    // Handle foreground messages
-    const unsubscribe = onForegroundMessage((payload) => {
+    const unsubscribePromise = onForegroundMessage((payload) => {
       console.log("Foreground message received:", payload);
-
-      // Display notification using toast
       toast.info(
         <div>
           <h5>{payload.notification?.title}</h5>
           <p>{payload.notification?.body}</p>
-        </div>,
-        {
-          position: "top-right",
-          autoClose: 5000,
-          closeOnClick: true,
-          pauseOnHover: true,
-        }
+        </div>
       );
-
-      // Handle custom data payload
-      if (payload.data) {
-        console.log("Notification data:", payload.data);
-        // Add custom logic here based on payload.data
-      }
     });
 
     return () => {
-      // Cleanup if needed
-      if (typeof unsubscribe === "function") {
-        unsubscribe();
-      }
+      unsubscribePromise.then((unsubscribe) => {
+        if (typeof unsubscribe === "function") {
+          unsubscribe();
+        }
+      });
     };
   }, []);
 

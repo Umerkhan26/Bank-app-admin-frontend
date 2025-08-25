@@ -25,8 +25,8 @@ import {
   SidebarHeader,
   SidebarIcon,
   SidebarText,
-  SidebarBadge,
   SidebarScrollWrapper,
+  SidebarDisabled,
 } from "./Admin.styles";
 import {
   MdBrandingWatermark,
@@ -69,13 +69,12 @@ const Admin: React.FC = () => {
           <SidebarScrollWrapper>
             <SidebarList>
               <SidebarItem>
-                <SidebarLink to="/admin/dashboard">
+                <SidebarDisabled>
                   <SidebarIcon>
                     <AiOutlineDashboard />
                   </SidebarIcon>
                   <SidebarText>Dashboard</SidebarText>
-                  <SidebarBadge>3</SidebarBadge>
-                </SidebarLink>
+                </SidebarDisabled>
               </SidebarItem>
 
               <SidebarItem>
@@ -86,7 +85,7 @@ const Admin: React.FC = () => {
                   <SidebarText>Users</SidebarText>
                 </SidebarLink>
               </SidebarItem>
- <SidebarItem>
+              <SidebarItem>
                 <SidebarLink to="/usersRedeemDetails">
                   <SidebarIcon>
                     <FaUsers />
@@ -157,7 +156,7 @@ const Admin: React.FC = () => {
                   <SidebarText>Bank Premium</SidebarText>
                 </SidebarLink>
               </SidebarItem>
- <SidebarItem>
+              <SidebarItem>
                 <SidebarLink to="/bank-premium-redeem-details">
                   <SidebarIcon>
                     <AiOutlineDashboard />
@@ -165,14 +164,21 @@ const Admin: React.FC = () => {
                   <SidebarText>Bank Premium Redeem Details</SidebarText>
                 </SidebarLink>
               </SidebarItem>
+
               <SidebarItem>
-                <SidebarLink to="/settings">
+                <SidebarLink to="/bank-offer">
                   <SidebarIcon>
                     <AiOutlineDashboard />
                   </SidebarIcon>
-                  <SidebarText>Settings</SidebarText>
+                  <SidebarText>Bank Offer</SidebarText>
                 </SidebarLink>
               </SidebarItem>
+              {/* <SidebarItem>
+                <SidebarIcon>
+                  <AiOutlineDashboard />
+                </SidebarIcon>
+                <SidebarText>Settings </SidebarText>
+              </SidebarItem> */}
 
               <SidebarItem>
                 <SidebarLink to="/reports">

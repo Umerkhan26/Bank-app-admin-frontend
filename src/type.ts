@@ -29,7 +29,12 @@ export interface Stores {
   description: string;
   action: string;
   status: string;
-  brand: string;
+  brand:
+    | {
+        _id: string;
+        brandName: string;
+      }
+    | string;
 }
 
 export interface StoreApiResponse {

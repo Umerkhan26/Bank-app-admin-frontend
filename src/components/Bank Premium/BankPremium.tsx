@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Column } from "react-table";
 import {
   getAllBankPremiums,
   createBankPremium,
@@ -23,6 +22,7 @@ import { toast } from "react-toastify";
 import { getAllBrands } from "../../services/brandService";
 import TableContainer from "../TabConatiner/TableConatiner";
 import { ClipLoader } from "react-spinners";
+import { CellProps, Column } from "react-table";
 
 interface IBrand {
   _id: string;
@@ -228,14 +228,14 @@ const BankPremium: React.FC = () => {
     () => [
       {
         Header: "#",
-        accessor: (_row: IBankPremium, i: number) => i + 1,
-        disableFilters: true,
+        id: "rowNumber",
+        Cell: ({ row }: CellProps<IBankPremium, number>) => row.index + 1,
         width: 40,
       },
       {
         Header: "Title",
-        accessor: "title",
-        Cell: ({ value }) => (
+        accessor: "title", // ✅ no need for `as keyof`
+        Cell: ({ value }: CellProps<IBankPremium, IBankPremium["title"]>) => (
           <div
             style={{ minHeight: "40px", display: "flex", alignItems: "center" }}
           >
@@ -247,32 +247,43 @@ const BankPremium: React.FC = () => {
       {
         Header: "Description",
         accessor: "description",
-        Cell: ({ value }) => value || "—",
+        Cell: ({
+          value,
+        }: CellProps<IBankPremium, IBankPremium["description"]>) =>
+          value || "—",
         width: 130,
       },
       {
         Header: "Points Required",
         accessor: "points_required",
-        Cell: ({ value }) => value || "—",
+        Cell: ({
+          value,
+        }: CellProps<IBankPremium, IBankPremium["points_required"]>) =>
+          value || "—",
         width: 110,
       },
       {
         Header: "Start Date",
         accessor: "start_date",
-        Cell: ({ value }) => new Date(value).toLocaleDateString(),
+        Cell: ({
+          value,
+        }: CellProps<IBankPremium, IBankPremium["start_date"]>) =>
+          new Date(value).toLocaleDateString(),
         width: 80,
       },
       {
         Header: "End Date",
         accessor: "end_date",
-        Cell: ({ value }) => new Date(value).toLocaleDateString(),
+        Cell: ({ value }: CellProps<IBankPremium, IBankPremium["end_date"]>) =>
+          new Date(value).toLocaleDateString(),
         width: 80,
       },
       {
         Header: "Image",
         accessor: "image_url",
-        disableFilters: true,
-        Cell: ({ value }) => {
+        Cell: ({
+          value,
+        }: CellProps<IBankPremium, IBankPremium["image_url"]>) => {
           const imageSrc = value && value !== "null" ? value : img1;
           return (
             <img
@@ -293,22 +304,21 @@ const BankPremium: React.FC = () => {
       },
       {
         Header: "Brand ID",
-        accessor: "brand", // this is already the ID string
-        Cell: ({ value }) => <span>{value || "—"}</span>,
+        accessor: "brand",
+        Cell: ({ value }: CellProps<IBankPremium, IBankPremium["brand"]>) => (
+          <span>{value || "—"}</span>
+        ),
         width: 180,
       },
-
       {
         Header: "Actions",
         id: "actions",
-        disableFilters: true,
-        Cell: ({ row }) => (
+        Cell: ({ row }: CellProps<IBankPremium, unknown>) => (
           <div style={{ display: "flex", gap: "10px" }}>
             <Button
               variant="secondary"
               size="sm"
               onClick={() => handleEdit(row.original)}
-              style={{ padding: "5px 10px" }}
             >
               Edit
             </Button>
@@ -316,7 +326,6 @@ const BankPremium: React.FC = () => {
               variant="danger"
               size="sm"
               onClick={() => handleDeleteBankPremium(row.original._id)}
-              style={{ padding: "5px 10px" }}
             >
               Delete
             </Button>
@@ -345,6 +354,14 @@ const BankPremium: React.FC = () => {
         }}
       >
         <ClipLoader size={40} color="#1a8797" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ color: "red", padding: "20px" }}>
+        Error: {error.message}
       </div>
     );
   }

@@ -62,6 +62,7 @@ export const TableHeader = styled.th`
 
 export const TableRow = styled.tr`
   border: 1px solid #ddd; /* Add border to rows */
+  height: 35px;
 
   &:hover {
     background-color: #f1f1f1;
@@ -72,7 +73,8 @@ export const TableData = styled.td`
   padding: 10px;
   color: black;
   font-size: 12px;
-  border: 1px solid #ddd; /* Add border to data cells */
+  white-space: nowrap;
+  border: 1px solid #ddd;
 `;
 
 export const UserProfilePic = styled.img`

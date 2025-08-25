@@ -10,6 +10,7 @@ import {
   refreshFcmToken,
 } from "../../utils/firebase";
 import { API_URL } from "../../services/brandService";
+import { AddUserButton } from "../../components/users/User.Styles";
 
 interface LoginResponse {
   token: string;
@@ -76,8 +77,7 @@ const Login: React.FC = () => {
 
     try {
       // 1. Perform login
-      const response = await loginUser(email, password);
-      const data: LoginResponse = response.data || response;
+      const data: LoginResponse = await loginUser(email, password);
 
       if (!data?.user?._id) {
         throw new Error("Invalid user data received from server");
@@ -175,6 +175,13 @@ const Login: React.FC = () => {
             </div>
           )}
 
+          {notification.title && (
+            <div className="alert alert-info mt-3">
+              <strong>{notification.title}</strong>
+              <p>{notification.body}</p>
+            </div>
+          )}
+
           {/* Display notification permission status */}
           <div className="text-center mb-3">
             {isTokenFound ? (
@@ -220,9 +227,9 @@ const Login: React.FC = () => {
             </div>
 
             <div className="d-grid gap-2 mb-3">
-              <button
+              <AddUserButton
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-success"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -236,7 +243,7 @@ const Login: React.FC = () => {
                 ) : (
                   "Sign In"
                 )}
-              </button>
+              </AddUserButton>
             </div>
 
             <div className="text-center">

@@ -1,32 +1,308 @@
+// // components/BankPremiumRedeem/BankPremiumRedeem.tsx
+// import React, { useState, useEffect } from "react";
+// import "bootstrap/dist/css/bootstrap.min.css";
+// import TableContainer from "../TabConatiner/TableConatiner";
+// import { ClipLoader } from "react-spinners";
+// import { toast } from "react-toastify";
+// import {
+//   Container,
+//   HeaderSection,
+//   Title,
+//   PremiumCount,
+//   SearchInput,
+//   VerifyButton,
+//   CodeInput,
+//   VerificationSection,
+//   StatusMessage,
+// } from "./BankPremiumRedeem.Styles";
+// import {
+//   getBankPremiumsWithStats,
+//   verifyRedemptionCode,
+// } from "../../services/bankPremiumService";
+// import { Column } from "react-table";
+
+// interface BankPremiumRow {
+//   id: string;
+//   title: string;
+//   code: string;
+//   status: string;
+//   redeemedAt: string;
+//   bankPremiumId: string;
+//   userName: string;
+//   userEmail: string;
+//   userAddress: string;
+//   userParish: string;
+// }
+
+// const BankPremiumRedeem: React.FC = () => {
+//   const [bankPremiums, setBankPremiums] = useState<BankPremiumRow[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<Error | null>(null);
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [pageSize, setPageSize] = useState(10);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [verificationCode, setVerificationCode] = useState("");
+//   const [verifying, setVerifying] = useState(false);
+//   const [verificationStatus, setVerificationStatus] = useState<{
+//     success: boolean;
+//     message: string;
+//   } | null>(null);
+
+//   useEffect(() => {
+//     const loadData = async () => {
+//       try {
+//         const premiums: any[] = await getBankPremiumsWithStats(); // API returns your provided data
+
+//         const rows: BankPremiumRow[] = premiums.map((p) => ({
+//           id: p.code,
+//           title: p.title,
+//           code: p.code,
+//           status: p.status,
+//           redeemedAt: new Date(p.redeemedAt).toLocaleString(),
+//           bankPremiumId: p.bankPremiumId,
+//           userName: p.user?.name || "-",
+//           userEmail: p.user?.email || "-",
+//           userAddress: p.user?.address || "-",
+//           userParish: p.user?.parish || "-",
+//         }));
+
+//         setBankPremiums(rows);
+//       } catch (err: any) {
+//         setError(err);
+//         toast.error(err.message || "Failed to fetch bank premiums.");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     loadData();
+//   }, []);
+
+//   const handleVerifyCode = async () => {
+//     if (!verificationCode.trim()) {
+//       toast.error("Please enter a verification code");
+//       return;
+//     }
+
+//     setVerifying(true);
+//     setVerificationStatus(null);
+
+//     try {
+//       const result = await verifyRedemptionCode(verificationCode.trim());
+//       setVerificationStatus({
+//         success: true,
+//         message: result.message || "Premium delivered successfully!",
+//       });
+//       setVerificationCode("");
+//       toast.success("Code verified successfully!");
+
+//       // Refresh data
+//       const premiums: any[] = await getBankPremiumsWithStats();
+//       const rows: BankPremiumRow[] = premiums.map((p) => ({
+//         id: p.code,
+//         title: p.title,
+//         code: p.code,
+//         status: p.status,
+//         redeemedAt: new Date(p.redeemedAt).toLocaleString(),
+//         bankPremiumId: p.bankPremiumId,
+//         userName: p.user?.name || "-",
+//         userEmail: p.user?.email || "-",
+//         userAddress: p.user?.address || "-",
+//         userParish: p.user?.parish || "-",
+//       }));
+//       setBankPremiums(rows);
+//     } catch (err: any) {
+//       setVerificationStatus({
+//         success: false,
+//         message: err.message || "Failed to verify code",
+//       });
+//       toast.error(err.message || "Failed to verify code");
+//     } finally {
+//       setVerifying(false);
+//     }
+//   };
+
+//   // Filter data
+//   const filteredData = bankPremiums.filter(
+//     (item) =>
+//       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       item.userName.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+
+//   const totalItems = filteredData.length;
+//   const totalPages = Math.ceil(totalItems / pageSize);
+//   const paginatedData = filteredData.slice(
+//     (currentPage - 1) * pageSize,
+//     currentPage * pageSize
+//   );
+
+//   const columns: Column<BankPremiumRow>[] = [
+//     {
+//       Header: "#",
+//       accessor: (_row: any, index: number) =>
+//         (currentPage - 1) * pageSize + index + 1,
+//       width: 30,
+//     },
+//     { Header: "Title", accessor: "title", width: 150 },
+//     { Header: "Code", accessor: "code", width: 90 },
+//     { Header: "Redeemed At", accessor: "redeemedAt", width: 150 },
+//     { Header: "User Name", accessor: "userName", width: 80 },
+//     { Header: "Email", accessor: "userEmail", width: 130 },
+//     { Header: "Address", accessor: "userAddress", width: 60 },
+//     { Header: "Parish", accessor: "userParish", width: 100 },
+//     { Header: "Status", accessor: "status", width: 80 },
+//   ];
+
+//   if (loading)
+//     return (
+//       <div
+//         style={{
+//           position: "fixed",
+//           top: 0,
+//           left: 0,
+//           width: "100vw",
+//           height: "100vh",
+//           backgroundColor: "rgba(255,255,255,0.6)",
+//           display: "flex",
+//           justifyContent: "center",
+//           alignItems: "center",
+//           zIndex: 9999,
+//         }}
+//       >
+//         <ClipLoader size={25} color="#1a8797" />
+//       </div>
+//     );
+
+//   if (error)
+//     return (
+//       <Container>
+//         <div
+//           style={{
+//             color: "red",
+//             textAlign: "center",
+//             padding: "20px",
+//             backgroundColor: "#ffe6e6",
+//             borderRadius: "4px",
+//             border: "1px solid #ffcccc",
+//           }}
+//         >
+//           Error loading data: {error.message}
+//         </div>
+//       </Container>
+//     );
+
+//   return (
+//     <Container style={{ fontSize: "11px" }}>
+//       <HeaderSection>
+//         <div>
+//           <Title style={{ fontSize: "14px" }}>Bank Premium Redemptions</Title>
+//           <PremiumCount>({bankPremiums.length} premiums)</PremiumCount>
+//         </div>
+//         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+//           <SearchInput
+//             type="text"
+//             placeholder="Search by title/code/user..."
+//             value={searchTerm}
+//             onChange={(e) => setSearchTerm(e.target.value)}
+//             style={{ fontSize: "11px", padding: "8px 15px", width: "180px" }}
+//           />
+//         </div>
+//       </HeaderSection>
+
+//       <VerificationSection>
+//         <div
+//           style={{
+//             display: "flex",
+//             alignItems: "center",
+//             gap: "10px",
+//             marginBottom: "10px",
+//           }}
+//         >
+//           <CodeInput
+//             type="text"
+//             placeholder="Enter redemption code..."
+//             value={verificationCode}
+//             onChange={(e) => setVerificationCode(e.target.value.toUpperCase())}
+//             style={{ fontSize: "11px", padding: "3px 5px", width: "150px" }}
+//             onKeyPress={(e) => e.key === "Enter" && handleVerifyCode()}
+//             disabled={verifying}
+//           />
+//           <VerifyButton
+//             onClick={handleVerifyCode}
+//             disabled={verifying}
+//             style={{ fontSize: "11px", padding: "4px 8px" }}
+//           >
+//             {verifying ? <ClipLoader size={10} color="#fff" /> : "Verify Code"}
+//           </VerifyButton>
+//         </div>
+//         {verificationStatus && (
+//           <StatusMessage success={verificationStatus.success}>
+//             {verificationStatus.message}
+//           </StatusMessage>
+//         )}
+//       </VerificationSection>
+
+//       <div style={{ width: "100%", overflowX: "auto" }}>
+//         <TableContainer
+//           columns={columns}
+//           data={paginatedData}
+//           isPagination={true}
+//           iscustomPageSize={true}
+//           pagination={{
+//             currentPage,
+//             totalPages,
+//             totalItems,
+//             pageSize,
+//           }}
+//           onPageChange={setCurrentPage}
+//           onPageSizeChange={setPageSize}
+//           showHeaderFilters={false}
+//         />
+//       </div>
+//     </Container>
+//   );
+// };
+
+// export default BankPremiumRedeem;
+
+// components/BankPremiumRedeem/BankPremiumRedeem.tsx
+
+// components/BankPremiumRedeem/BankPremiumRedeem.tsx
 import React, { useState, useEffect } from "react";
-import { Column } from "react-table";
-import { fetchCampaignsWithLeaderboard, CampaignWithLeaderboard } from "../../services/campaign";
 import "bootstrap/dist/css/bootstrap.min.css";
+import TableContainer from "../TabConatiner/TableConatiner";
+import { ClipLoader } from "react-spinners";
+import { toast } from "react-toastify";
 import {
   Container,
   HeaderSection,
   Title,
-  UserCount,
+  PremiumCount,
   SearchInput,
-} from "./User.Styles";
-import TableContainer from "../TabConatiner/TableConatiner";
-import { ClipLoader } from "react-spinners";
-import { toast } from "react-toastify";
+} from "./BankPremiumRedeem.Styles";
+import {
+  getBankPremiumsWithStats,
+  updateRedemptionStatus,
+} from "../../services/bankPremiumService";
+import { Column } from "react-table";
 
-interface LeaderboardRow {
-  campaignTitle: string;
-  brandName: string;
+interface BankPremiumRow {
+  id: string;
+  title: string;
+  code: string;
+  status: string;
+  redeemedAt: string;
+  bankPremiumId: string;
   userName: string;
   userEmail: string;
-  totalRedeems: number;
-  lastRedeemedAt: string;
-  pointsRequired: number;
-  startDate: string;
-  endDate: string;
+  userAddress: string;
+  userParish: string;
 }
+type RedemptionStatus = "pending" | "delivered";
 
-const UserRedeemDetails: React.FC = () => {
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardRow[]>([]);
+const BankPremiumRedeem: React.FC = () => {
+  const [bankPremiums, setBankPremiums] = useState<BankPremiumRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,44 +312,23 @@ const UserRedeemDetails: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const campaigns: CampaignWithLeaderboard[] = await fetchCampaignsWithLeaderboard();
-        const rows: LeaderboardRow[] = [];
-
-        campaigns.forEach((campaign) => {
-          const brandName = typeof campaign.brand === "string" ? campaign.brand : campaign.brand?.brandName || "N/A";
-          const pointsRequired = Number(campaign.points_required || 0);
-          const startDate = campaign.start_date ? new Date(campaign.start_date).toLocaleDateString() : "-";
-          const endDate = campaign.end_date ? new Date(campaign.end_date).toLocaleDateString() : "-";
-
-          if (Array.isArray(campaign.leaderboard) && campaign.leaderboard.length > 0) {
-            // Only include users with at least 1 redemption
-            campaign.leaderboard.forEach((user) => {
-              const totalRedeems = user.totalRedeems || 0;
-              if (totalRedeems > 0) {
-                const lastRedeemedAt = user.lastRedeemedAt
-                  ? new Date(user.lastRedeemedAt).toLocaleString()
-                  : "-";
-
-                rows.push({
-                  campaignTitle: campaign.title,
-                  brandName,
-                  userName: user.fullName || user.username || "-",
-                  userEmail: user.email || "-",
-                  totalRedeems,
-                  lastRedeemedAt,
-                  pointsRequired,
-                  startDate,
-                  endDate,
-                });
-              }
-            });
-          }
-        });
-
-        setLeaderboardData(rows);
-      } catch (err) {
-        setError(err as Error);
-        toast.error("Failed to fetch leaderboard data.");
+        const premiums: any[] = await getBankPremiumsWithStats();
+        const rows: BankPremiumRow[] = premiums.map((p) => ({
+          id: p.code,
+          title: p.title,
+          code: p.code,
+          status: p.status,
+          redeemedAt: new Date(p.redeemedAt).toLocaleString(),
+          bankPremiumId: p.bankPremiumId,
+          userName: p.user?.name || "-",
+          userEmail: p.user?.email || "-",
+          userAddress: p.user?.address || "-",
+          userParish: p.user?.parish || "-",
+        }));
+        setBankPremiums(rows);
+      } catch (err: any) {
+        setError(err);
+        toast.error(err.message || "Failed to fetch bank premiums.");
       } finally {
         setLoading(false);
       }
@@ -82,14 +337,20 @@ const UserRedeemDetails: React.FC = () => {
     loadData();
   }, []);
 
-  // Filter
-  const filteredData = leaderboardData.filter(
-    (item) =>
-      item.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.campaignTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.brandName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = bankPremiums.filter((item) => {
+    if (!searchTerm.trim()) return true;
+
+    // Exact code match filter if search looks like a code
+    if (/^[A-Z0-9]+$/i.test(searchTerm.trim())) {
+      return item.code.toLowerCase() === searchTerm.trim().toLowerCase();
+    }
+
+    // Otherwise, normal partial search
+    return (
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.userName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / pageSize);
@@ -98,23 +359,61 @@ const UserRedeemDetails: React.FC = () => {
     currentPage * pageSize
   );
 
-  const columns: Column<LeaderboardRow>[] = React.useMemo(
-    () => [
-      { Header: "ID", accessor: (_row: any, index: number) => index + 1, width: 30 },
-      { Header: "User", accessor: "userName", width: 100 },
-      { Header: "Email", accessor: "userEmail", width: 120 },
-      { Header: "Campaign", accessor: "campaignTitle", width: 100 },
-      { Header: "Brand", accessor: "brandName", width: 80 },
-      { Header: "Redeems", accessor: "totalRedeems", width: 50 },
-      { Header: "Last Redeemed", accessor: "lastRedeemedAt", width: 100 },
-      { Header: "Points Req.", accessor: "pointsRequired", width: 50 },
-      { Header: "Start", accessor: "startDate", width: 70 },
-      { Header: "End", accessor: "endDate", width: 70 },
-    ],
-    []
-  );
+  const columns: Column<BankPremiumRow>[] = [
+    {
+      Header: "#",
+      accessor: (_row: any, index: number) =>
+        (currentPage - 1) * pageSize + index + 1,
+      width: 30,
+    },
+    { Header: "Title", accessor: "title", width: 150 },
+    { Header: "Code", accessor: "code", width: 90 },
+    { Header: "Redeemed At", accessor: "redeemedAt", width: 150 },
+    { Header: "User Name", accessor: "userName", width: 70 },
+    { Header: "Email", accessor: "userEmail", width: 120 },
+    { Header: "Address", accessor: "userAddress", width: 60 },
+    { Header: "Parish", accessor: "userParish", width: 100 },
+    {
+      Header: "Status",
+      accessor: "status",
+      width: 100,
+      Cell: ({ row }: any) => {
+        const currentStatus = row.original.status;
+        return (
+          <select
+            value={currentStatus}
+            onChange={async (e) => {
+              const newStatus = e.target.value as RedemptionStatus;
 
-  if (loading) {
+              if (newStatus !== "pending" && newStatus !== "delivered") {
+                toast.error("Invalid status selected");
+                return;
+              }
+              try {
+                await updateRedemptionStatus(row.original.code, newStatus);
+                setBankPremiums((prev) =>
+                  prev.map((item) =>
+                    item.code === row.original.code
+                      ? { ...item, status: newStatus }
+                      : item
+                  )
+                );
+                toast.success(`Status updated to "${newStatus}"`);
+              } catch (err: any) {
+                toast.error(err.message || "Failed to update status");
+              }
+            }}
+            style={{ fontSize: "11px", padding: "3px" }}
+          >
+            <option value="pending">Pending</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        );
+      },
+    },
+  ];
+
+  if (loading)
     return (
       <div
         style={{
@@ -123,36 +422,49 @@ const UserRedeemDetails: React.FC = () => {
           left: 0,
           width: "100vw",
           height: "100vh",
-          backgroundColor: "rgba(255, 255, 255, 0.6)",
-          zIndex: 9999,
+          backgroundColor: "rgba(255,255,255,0.6)",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          zIndex: 9999,
         }}
       >
         <ClipLoader size={25} color="#1a8797" />
       </div>
     );
-  }
 
-  if (error) {
-    return <div>Error loading data: {error.message}</div>;
-  }
+  if (error)
+    return (
+      <Container>
+        <div
+          style={{
+            color: "red",
+            textAlign: "center",
+            padding: "20px",
+            backgroundColor: "#ffe6e6",
+            borderRadius: "4px",
+            border: "1px solid #ffcccc",
+          }}
+        >
+          Error loading data: {error.message}
+        </div>
+      </Container>
+    );
 
   return (
     <Container style={{ fontSize: "11px" }}>
       <HeaderSection>
         <div>
-          <Title style={{ fontSize: "14px" }}>User Redeem Leaderboard</Title>
-          <UserCount>({leaderboardData.length})</UserCount>
+          <Title style={{ fontSize: "14px" }}>Bank Premium Redemptions</Title>
+          <PremiumCount>({bankPremiums.length} premiums)</PremiumCount>
         </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <SearchInput
             type="text"
-            placeholder="Search user, campaign or brand..."
+            placeholder="Search by title/code/user..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ fontSize: "11px", padding: "3px 5px", width: "160px" }}
+            style={{ fontSize: "11px", padding: "8px 15px", width: "180px" }}
           />
         </div>
       </HeaderSection>
@@ -178,4 +490,4 @@ const UserRedeemDetails: React.FC = () => {
   );
 };
 
-export default UserRedeemDetails;
+export default BankPremiumRedeem;

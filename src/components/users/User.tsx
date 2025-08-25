@@ -38,6 +38,7 @@ const User: React.FC = () => {
   const [editingStatusUserId, setEditingStatusUserId] = useState<string | null>(
     null
   );
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -45,10 +46,10 @@ const User: React.FC = () => {
     const loadData = async () => {
       try {
         const fetchedUsers = await fetchUsersData();
-        console.log("all user", fetchedUsers);
         setUsers(fetchedUsers);
       } catch (err) {
         setError(err as Error);
+        toast.error("Failed to fetch users.");
       } finally {
         setLoading(false);
       }
@@ -73,13 +74,16 @@ const User: React.FC = () => {
         )
       );
       setEditingStatusUserId(null);
+      toast.success("User status updated!");
     } catch (err) {
       console.error("Error updating user status:", err);
-      setError(new Error("Failed to update user status"));
+      toast.error("Failed to update user status");
     }
   };
 
   const handleDeleteUser = async (user: User) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
     try {
       const deletedUser = await deleteUser(user._id);
       setUsers((prevUsers) =>
@@ -88,20 +92,26 @@ const User: React.FC = () => {
       toast.success("User deleted successfully!");
     } catch (error) {
       console.error("Error deleting user:", error);
-      setError(new Error("Failed to delete user"));
       toast.error("Failed to delete user.");
     }
   };
 
-  // Calculate pagination
-  const totalItems = users.length;
+  // Filtered data
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.isActive ? "active" : "blocked").includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination
+  const totalItems = filteredUsers.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedUsers = users.slice(
+  const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  // Define columns for react-table with explicit widths
   const columns: Column<User>[] = React.useMemo(
     () => [
       {
@@ -133,9 +143,7 @@ const User: React.FC = () => {
         Cell: ({ row }) => {
           const user = row.original;
 
-          if (typeof user.points === "number") {
-            return user.points;
-          }
+          if (typeof user.points === "number") return user.points;
 
           if (Array.isArray(user.brandPoints)) {
             const total = user.brandPoints.reduce(
@@ -151,6 +159,7 @@ const User: React.FC = () => {
       {
         Header: "Action",
         accessor: "_id",
+        width: 200,
         Cell: ({ row }) => (
           <div style={{ display: "flex", alignItems: "center" }}>
             {editingStatusUserId === row.original._id ? (
@@ -162,11 +171,9 @@ const User: React.FC = () => {
                     handleStatusOptionChange(row.original._id, "Active")
                   }
                   style={{
-                    backgroundColor: row.original.isActive
-                      ? "#1a8797"
-                      : "#1a8797",
+                    backgroundColor: "#1a8797",
                     color: "white",
-                    padding: "7px 15px",
+                    padding: "5px 15px",
                     border: "none",
                     borderRadius: "5px",
                     cursor: "pointer",
@@ -179,11 +186,9 @@ const User: React.FC = () => {
                     handleStatusOptionChange(row.original._id, "Blocked")
                   }
                   style={{
-                    backgroundColor: !row.original.isActive
-                      ? "#dc3545"
-                      : "#1a8797",
+                    backgroundColor: "#dc3545",
                     color: "white",
-                    padding: "7px 10px",
+                    padding: "5px 10px",
                     border: "none",
                     cursor: "pointer",
                     borderRadius: "5px",
@@ -195,7 +200,7 @@ const User: React.FC = () => {
                   onClick={() => handleDeleteUser(row.original)}
                   className="btn btn-danger ms-2"
                   style={{
-                    padding: "7px 9px",
+                    padding: "5px 9px",
                     border: "none",
                     borderRadius: "5px",
                     cursor: "pointer",
@@ -237,7 +242,6 @@ const User: React.FC = () => {
             )}
           </div>
         ),
-        width: 200,
       },
     ],
     [editingStatusUserId]
@@ -264,26 +268,36 @@ const User: React.FC = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div style={{ color: "red", padding: "20px" }}>
+        Error: {error.message}
+      </div>
+    );
+  }
+
   return (
     <Container>
       <HeaderSection>
         <div>
           <Title>All Users</Title>
-          <UserCount>({users.length})</UserCount>
+          <UserCount>({filteredUsers.length})</UserCount>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
           <SearchInput
             type="text"
             placeholder="Search users..."
+            value={searchTerm}
             onChange={(e) => {
-              // Implement global search if needed
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
             }}
           />
           <AddUserButton>Add User</AddUserButton>
         </div>
       </HeaderSection>
 
-      <div style={{ width: "100%", overflow: "hidden" }}>
+      <div style={{ width: "100%", overflowX: "auto" }}>
         <TableContainer
           columns={columns}
           data={paginatedUsers}

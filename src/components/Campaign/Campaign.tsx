@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form } from "react-bootstrap";
 import { toast } from "react-toastify";
@@ -48,7 +48,6 @@ const Campaign: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isStatusChanging, setIsStatusChanging] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -68,6 +67,11 @@ const Campaign: React.FC = () => {
     imagePreview: null,
     brand: "",
   });
+
+  // New state for filtering and pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -82,9 +86,6 @@ const Campaign: React.FC = () => {
         setBrands(brandsData);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError(
-          error instanceof Error ? error : new Error("Failed to fetch data")
-        );
       } finally {
         setLoading(false);
       }
@@ -92,10 +93,30 @@ const Campaign: React.FC = () => {
     fetchData();
   }, []);
 
+  // Filter campaigns based on search term
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(
+      (campaign) =>
+        campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        campaign.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (campaign.brand?.brandName || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+    );
+  }, [campaigns, searchTerm]);
+
+  // Paginate data
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredCampaigns.slice(startIndex, startIndex + pageSize);
+  }, [filteredCampaigns, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredCampaigns.length / pageSize);
+
   const columns: Column<Campaigns>[] = [
     {
       Header: "ID",
-      accessor: (_row, index) => index + 1,
+      accessor: (_row, index) => (currentPage - 1) * pageSize + index + 1,
       id: "index",
       width: 40,
     },
@@ -127,7 +148,7 @@ const Campaign: React.FC = () => {
       id: "image",
       Cell: ({ value }) => (
         <img
-          src={value}
+          src={value || undefined}
           alt="Campaign"
           style={{
             width: "40px",
@@ -298,7 +319,7 @@ const Campaign: React.FC = () => {
         isEditing && campaignId
           ? await updateCampaignData(formDataToSend, campaignId)
           : await createCampaignData(formDataToSend);
-
+      console.log("camapaign res", campaignResponse);
       const updatedCampaigns = await CampaignsData();
       setCampaigns(updatedCampaigns);
 
@@ -345,7 +366,7 @@ const Campaign: React.FC = () => {
       toast.success("Campaign status updated successfully!");
     } catch (error) {
       console.error("Error updating campaign status:", error);
-      setError(new Error("Failed to update campaign status"));
+
       toast.error("Error updating campaign status");
     } finally {
       setIsStatusChanging(false);
@@ -440,10 +461,15 @@ const Campaign: React.FC = () => {
         <HeaderSection>
           <div>
             <Title>All Campaigns</Title>
-            <UserCount>({campaigns.length})</UserCount>
+            <UserCount>({filteredCampaigns.length})</UserCount>
           </div>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <SearchInput type="text" placeholder="Search campaigns..." />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <SearchInput
+              type="text"
+              placeholder="Search campaigns..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <AddUserButton
               onClick={() => {
                 setIsEditing(false);
@@ -644,13 +670,31 @@ const Campaign: React.FC = () => {
           </Modal.Body>
         </Modal>
 
-        <TableContainer
-          columns={columns}
-          data={campaigns}
-          isPagination={true}
-          iscustomPageSize={true}
-          className="table-responsive"
-        />
+        <div
+          style={{
+            width: "100%",
+            overflowX: "auto",
+            maxHeight: "calc(100vh - 200px)", // Adjust table height
+            overflowY: "auto",
+          }}
+        >
+          <TableContainer
+            columns={columns}
+            data={paginatedData}
+            isPagination={true}
+            iscustomPageSize={true}
+            pagination={{
+              currentPage,
+              totalPages,
+              totalItems: filteredCampaigns.length,
+              pageSize,
+            }}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            showHeaderFilters={false}
+            className="table-responsive"
+          />
+        </div>
       </Container>
     </div>
   );

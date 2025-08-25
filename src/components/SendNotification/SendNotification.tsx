@@ -279,13 +279,7 @@ const Notifications: React.FC = () => {
             <Title>Push Notification</Title>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <SearchInput
-              type="text"
-              placeholder="Search users..."
-              onChange={(e) => {
-                // Implement global search if needed
-              }}
-            />
+            <SearchInput type="text" placeholder="Search users..." />
             {/* <AddUserButton>Add User</AddUserButton> */}
           </div>
         </HeaderSection>

@@ -13,6 +13,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import SendNotification from "../components/SendNotification/SendNotification";
 import UserRedeemDetails from "../components/userRedeemDetails/userRedeemDetails";
 import BankPremiumRedeem from "../components/bankPremiumRedeem/BankPremiumRedeem";
+import BankOffer from "../components/BankOffer/BankOffer";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -26,9 +27,12 @@ const AppRoutes: React.FC = () => {
           <Route path="users" element={<User />} />
           <Route path="/usersRedeemDetails" element={<UserRedeemDetails />} />
           bank-premium-redeem-details
-          <Route path="/bank-premium-redeem-details" element={<BankPremiumRedeem />} />
-
+          <Route
+            path="/bank-premium-redeem-details"
+            element={<BankPremiumRedeem />}
+          />
           <Route path="campaigns" element={<Campaigns />} />
+          <Route path="bank-offer" element={<BankOffer />} />
           <Route path="brand" element={<Brand />} />
           <Route path="enrolled-users" element={<EnrolledUsersPage />} />
           <Route path="stores" element={<Store />} />
