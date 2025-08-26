@@ -16,6 +16,7 @@ import {
 
 import { QRCode, QRCodeResponse, Brand } from "../../type";
 import {
+  bulkUploadQRCodes,
   createqrcodeData,
   deleteQRCodeData,
   getqrcodeData,
@@ -56,8 +57,6 @@ const Qrcode: React.FC = () => {
         } else {
           toast.error("No QR codes available.");
         }
-      } catch {
-        toast.error("Failed to load QR Codes or Brands.");
       } finally {
         setLoading(false);
       }
@@ -145,6 +144,29 @@ const Qrcode: React.FC = () => {
       setQrCodes((prev) => prev.filter((item) => item._id !== qr._id));
     } catch {
       toast.error("Error deleting QR Code.");
+    }
+  };
+
+  // ✅ CSV Import
+  // ✅ CSV Import using bulkUploadQRCodes API
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      const result = await bulkUploadQRCodes(file); // call your API function
+
+      // Check backend response
+      if (result && result.message) {
+        toast.success(result.message); // show "X QR codes inserted successfully"
+      } else {
+        toast.error("No QR codes inserted.");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error uploading CSV.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -257,7 +279,7 @@ const Qrcode: React.FC = () => {
             </AddUserButton>
 
             {/* ✅ CSV Import Button */}
-            {/* <label className="btn btn-success" style={{ marginLeft: "10px" }}>
+            <label className="btn btn-success" style={{ marginLeft: "10px" }}>
               Import CSV
               <input
                 type="file"
@@ -265,7 +287,7 @@ const Qrcode: React.FC = () => {
                 hidden
                 onChange={handleCSVUpload}
               />
-            </label> */}
+            </label>
           </div>
           <div
             style={{

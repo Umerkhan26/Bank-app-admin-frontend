@@ -27,9 +27,11 @@ export const createqrcodeData = async (qrcodeData: any) => {
   }
 };
 
-export const getqrcodeData = async () => {
+export const getqrcodeData = async (page = 1, limit = 20) => {
   try {
-    const response = await axios.get(`${API_URL}/getqrCode`);
+    const response = await axios.get(`${API_URL}/getqrCode`, {
+      params: { page, limit },
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching QR code data:", error);
@@ -92,7 +94,6 @@ export const deleteQRCodeData = async (qrCodeId: string) => {
   }
 };
 
-
 export const bulkUploadQRCodes = async (file: File) => {
   const token = localStorage.getItem("token");
 
@@ -110,7 +111,7 @@ export const bulkUploadQRCodes = async (file: File) => {
         "Content-Type": "multipart/form-data",
       },
     });
-    console.log("response from qr code csv ", response)
+    console.log("response from qr code csv ", response);
     return response.data;
   } catch (error: any) {
     console.error("Error uploading QR codes:", error);
