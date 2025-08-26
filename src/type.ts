@@ -87,6 +87,7 @@ export type QRCode = {
   _id?: string;
   code: string;
   points: number;
+  codeUrl: string;
   isUsed: boolean;
   brand: Brand | string;
 };

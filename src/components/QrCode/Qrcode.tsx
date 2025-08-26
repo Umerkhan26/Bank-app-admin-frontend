@@ -399,6 +399,7 @@
 // export default Qrcode;
 
 // components/Qrcode.tsx
+
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form } from "react-bootstrap";
@@ -448,6 +449,7 @@ const Qrcode: React.FC = () => {
     points: 0,
     isUsed: false,
     brand: "",
+    codeUrl: "",
   });
 
   useEffect(() => {
@@ -503,7 +505,7 @@ const Qrcode: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { code, points, isUsed, brand } = formData;
+    const { code, points, isUsed, brand, codeUrl } = formData;
 
     if (!code || points === undefined || isUsed === undefined || !brand) {
       toast.error("All fields are required.");
@@ -516,7 +518,9 @@ const Qrcode: React.FC = () => {
       points: typeof points === "string" ? parseInt(points) : points,
       isUsed,
       brand: typeof brand === "object" && brand !== null ? brand._id : brand,
+      codeUrl,
     };
+    console.log("Payload sending", payload);
 
     try {
       let res: QRCodeResponse;
@@ -530,6 +534,7 @@ const Qrcode: React.FC = () => {
         res = await createqrcodeData(payload);
         toast.success("QR Code created!");
         const qrCodeData = await getqrcodeData(currentPage, pageSize);
+        console.log("crrate qrcode response", res);
         setQrCodes(qrCodeData.qrCodes);
         setTotalPages(qrCodeData.totalPages);
         setTotalCount(qrCodeData.totalCount);
@@ -537,7 +542,13 @@ const Qrcode: React.FC = () => {
         setUnusedCount(qrCodeData.unusedCount);
       }
 
-      setFormData({ code: "", points: 0, isUsed: false, brand: "" });
+      setFormData({
+        code: "",
+        points: 0,
+        isUsed: false,
+        brand: "",
+        codeUrl: "",
+      });
       setIsEditing(false);
       handleCloseModal();
     } catch (error: any) {
@@ -550,6 +561,7 @@ const Qrcode: React.FC = () => {
     setFormData({
       _id: qr._id,
       code: qr.code,
+      codeUrl: qr.codeUrl || qr.code,
       points: qr.points,
       isUsed: qr.isUsed,
       brand: typeof qr.brand === "object" ? qr.brand._id : qr.brand,
@@ -612,9 +624,14 @@ const Qrcode: React.FC = () => {
     setCurrentPage(1); // Reset to first page when page size changes
   };
 
-  const filteredQRCodes = qrcode.filter((qr) =>
-    qr.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredQRCodes = qrcode.filter((qr) => {
+    const term = searchTerm.toLowerCase();
+
+    return (
+      qr.code.toLowerCase().includes(term) ||
+      (qr.codeUrl && qr.codeUrl.toLowerCase().includes(term))
+    );
+  });
 
   const columns: Column<QRCode>[] = [
     {
@@ -626,7 +643,7 @@ const Qrcode: React.FC = () => {
     },
     {
       Header: "Code",
-      accessor: "code",
+      accessor: "codeUrl",
       width: 150,
     },
     {
@@ -716,7 +733,14 @@ const Qrcode: React.FC = () => {
             <AddUserButton
               onClick={() => {
                 setIsEditing(false);
-                setFormData({ code: "", points: 0, isUsed: false, brand: "" });
+                setFormData({
+                  code: "",
+                  codeUrl: "",
+                  points: 0,
+                  isUsed: false,
+                  brand: "",
+                });
+
                 handleShowModal();
               }}
             >
@@ -765,6 +789,19 @@ const Qrcode: React.FC = () => {
                     required
                   />
                 </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Code URL</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="codeUrl"
+                    value={formData.codeUrl}
+                    onChange={handleChange}
+                    placeholder="Enter QR code URL or image path"
+                    required
+                  />
+                </Form.Group>
+
                 <Form.Group className="mb-3">
                   <Form.Label>Points</Form.Label>
                   <Form.Control
