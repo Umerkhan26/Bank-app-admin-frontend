@@ -42,6 +42,7 @@ export const getqrcodeData = async (page: number = 1, limit: number = 20) => {
     const response = await axios.get(`${API_URL}/getqrCode`, {
       params: { page, limit },
     });
+    console.log("response from get qr code api", response);
     return response.data;
   } catch (error) {
     console.error("Error fetching QR code data:", error);
