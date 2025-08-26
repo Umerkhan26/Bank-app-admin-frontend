@@ -27,7 +27,17 @@ export const createqrcodeData = async (qrcodeData: any) => {
   }
 };
 
-export const getqrcodeData = async (page = 1, limit = 20) => {
+// export const getqrcodeData = async () => {
+//   try {
+//     const response = await axios.get(`${API_URL}/getqrCode`);
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching QR code data:", error);
+//     throw error;
+//   }
+// };
+
+export const getqrcodeData = async (page: number = 1, limit: number = 20) => {
   try {
     const response = await axios.get(`${API_URL}/getqrCode`, {
       params: { page, limit },
@@ -38,7 +48,6 @@ export const getqrcodeData = async (page = 1, limit = 20) => {
     throw error;
   }
 };
-
 export const updateQRCodeData = async (
   qrCodeData: {
     code: string;

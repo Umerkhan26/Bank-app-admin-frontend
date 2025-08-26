@@ -426,6 +426,7 @@ interface TableContainerProps<T extends object> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
   showHeaderFilters?: boolean;
+  page?: number;
   tableStyle?: React.CSSProperties; // Added tableStyle prop
   rowProps?: (
     row: ReactTableRow<T>

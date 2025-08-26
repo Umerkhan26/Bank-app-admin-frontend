@@ -93,4 +93,5 @@ export type QRCode = {
 
 export type QRCodeResponse = {
   qrCode: QRCode;
+  updatedQRCode?: QRCode;
 };
