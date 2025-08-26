@@ -33,7 +33,6 @@ interface Brand {
 const Brand: React.FC = () => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
@@ -56,10 +55,7 @@ const Brand: React.FC = () => {
         const data = await getAllBrands();
         console.log("All brands");
         setBrands(data);
-      } catch (err) {
-        setError(err as Error);
-        console.error("Failed to load brands");
-      } finally {
+      } catch {
         setLoading(false);
       }
     };
@@ -318,22 +314,6 @@ const Brand: React.FC = () => {
       )}
 
       <Container>
-        {error && (
-          <div
-            style={{
-              color: "red",
-              background: "#ffe6e6",
-              padding: "10px",
-              marginTop: "10px",
-              border: "1px solid red",
-              borderRadius: "4px",
-              textAlign: "center",
-            }}
-          >
-            {error.message}
-          </div>
-        )}
-
         <HeaderSection>
           <div>
             <Title>All Brands</Title>
