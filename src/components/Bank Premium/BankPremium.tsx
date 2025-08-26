@@ -33,7 +33,6 @@ const BankPremium: React.FC = () => {
   const [bankPremiums, setBankPremiums] = useState<IBankPremium[]>([]);
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
@@ -71,8 +70,6 @@ const BankPremium: React.FC = () => {
         const brandData = await getAllBrands();
         setBankPremiums(premiumData);
         setBrands(brandData);
-      } catch (err) {
-        setError(err as Error);
       } finally {
         setLoading(false);
       }
@@ -354,14 +351,6 @@ const BankPremium: React.FC = () => {
         }}
       >
         <ClipLoader size={40} color="#1a8797" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ color: "red", padding: "20px" }}>
-        Error: {error.message}
       </div>
     );
   }

@@ -429,7 +429,7 @@ const BankPremiumRedeem: React.FC = () => {
           zIndex: 9999,
         }}
       >
-        <ClipLoader size={25} color="#1a8797" />
+        <ClipLoader size={40} color="#1a8797" />
       </div>
     );
 

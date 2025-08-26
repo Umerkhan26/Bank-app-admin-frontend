@@ -29,7 +29,6 @@ const Qrcode: React.FC = () => {
   const [qrcode, setQrCodes] = useState<QRCode[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<null | Error>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [qrcodeId, setqrcodeId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -57,8 +56,7 @@ const Qrcode: React.FC = () => {
         } else {
           toast.error("No QR codes available.");
         }
-      } catch (err) {
-        setError(err as Error);
+      } catch {
         toast.error("Failed to load QR Codes or Brands.");
       } finally {
         setLoading(false);
@@ -67,8 +65,6 @@ const Qrcode: React.FC = () => {
 
     fetchData();
   }, []);
-
-  if (error) return <div>Error loading data: {error.message}</div>;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -217,12 +213,24 @@ const Qrcode: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loading-overlay">
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(255,255,255,0.6)",
+          zIndex: 9999,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <ClipLoader size={40} color="#1a8797" />
       </div>
     );
   }
-
   return (
     <Container>
       <HeaderSection>
