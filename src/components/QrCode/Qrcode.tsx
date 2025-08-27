@@ -642,8 +642,14 @@ const Qrcode: React.FC = () => {
       width: 50,
     },
     {
-      Header: "Code",
+      Header: "CodeUrl",
       accessor: "codeUrl",
+      width: 150,
+    },
+
+    {
+      Header: "Code",
+      accessor: "code",
       width: 150,
     },
     {
