@@ -90,11 +90,11 @@ const Qrcode: React.FC = () => {
     }));
   };
 
-  const handleBrandChange = (
-    selected: { value: string; label: string } | null
-  ) => {
-    setFormData((prev) => ({ ...prev, brand: selected?.value || "" }));
-  };
+  // const handleBrandChange = (
+  //   selected: { value: string; label: string } | null
+  // ) => {
+  //   setFormData((prev) => ({ ...prev, brand: selected?.label || "" }));
+  // };
 
   const handleCloseModal = () => setShowModal(false);
   const handleShowModal = () => setShowModal(true);
@@ -155,6 +155,20 @@ const Qrcode: React.FC = () => {
     setLoading(false);
   };
 
+  // const handleEditQRCode = (qr: QRCode) => {
+  //   setFormData({
+  //     _id: qr._id,
+  //     code: qr.code,
+  //     codeUrl: qr.codeUrl || qr.code,
+  //     points: qr.points,
+  //     isUsed: qr.isUsed,
+  //     brand: typeof qr.brand === "object" ? qr.brand._id : qr.brand,
+  //   });
+  //   setqrcodeId(qr._id ?? null);
+  //   setIsEditing(true);
+  //   setShowModal(true);
+  // };
+
   const handleEditQRCode = (qr: QRCode) => {
     setFormData({
       _id: qr._id,
@@ -162,7 +176,10 @@ const Qrcode: React.FC = () => {
       codeUrl: qr.codeUrl || qr.code,
       points: qr.points,
       isUsed: qr.isUsed,
-      brand: typeof qr.brand === "object" ? qr.brand._id : qr.brand,
+      brand:
+        typeof qr.brand === "object"
+          ? qr.brand.brandName // ✅ use brand name
+          : qr.brand, // already a string (name)
     });
     setqrcodeId(qr._id ?? null);
     setIsEditing(true);
@@ -421,16 +438,21 @@ const Qrcode: React.FC = () => {
                   <Form.Label>Brand</Form.Label>
                   <Select
                     options={brands.map((brand) => ({
-                      value: brand._id,
-                      label: brand.brandName,
+                      value: brand._id, // keep id for react-select
+                      label: brand.brandName, // display brand name
                     }))}
-                    value={brands
-                      .map((b) => ({
-                        value: b._id,
-                        label: b.brandName,
-                      }))
-                      .find((opt) => opt.value === formData.brand)}
-                    onChange={handleBrandChange}
+                    value={
+                      formData.brand
+                        ? { value: formData.brand, label: formData.brand } // ✅ brand name stored
+                        : null
+                    }
+                    onChange={
+                      (selected) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          brand: selected?.label || "",
+                        })) // ✅ save brand name
+                    }
                     placeholder="Select a brand"
                     isSearchable
                   />
