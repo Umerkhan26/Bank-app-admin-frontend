@@ -3,7 +3,7 @@
 // import { Modal, Form, Tabs, Tab } from "react-bootstrap";
 // import { toast } from "react-toastify";
 // import Select from "react-select";
-// import Papa from "papaparse"; // <-- CSV parsing
+// import Papa from "papaparse";
 // import {
 //   Container,
 //   HeaderSection,
@@ -40,7 +40,6 @@
 // const Store: React.FC = () => {
 //   const [store, setStores] = useState<Stores[]>([]);
 //   const [brands, setBrands] = useState<Brand[]>([]);
-//   const [error, setError] = useState<null | Error>(null);
 //   const [isEditing, setIsEditing] = useState<boolean>(false);
 //   const [storeId, setStoreId] = useState<string | null>(null);
 //   const [showModal, setShowModal] = useState(false);
@@ -48,6 +47,9 @@
 //   const [isSaving, setIsSaving] = useState(false);
 //   const [isDeleting, setIsDeleting] = useState(false);
 //   const [deletingId, setDeletingId] = useState<string | null>(null);
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [pageSize, setPageSize] = useState(10);
 
 //   const [formData, setFormData] = useState<storeData>({
 //     storeName: "",
@@ -70,16 +72,12 @@
 //         ]);
 //         setStores(storesData.stores);
 //         setBrands(brandsData);
-//       } catch (error) {
-//         setError(
-//           error instanceof Error ? error : new Error("Failed to fetch data")
-//         );
+//       } catch {
 //         toast.error("Error fetching data. Please try again later.");
 //       } finally {
 //         setLoading(false);
 //       }
 //     };
-
 //     fetchData();
 //   }, []);
 
@@ -99,13 +97,8 @@
 //     setFormData((prev) => ({ ...prev, brand: selectedOption?.value || "" }));
 //   };
 
-//   const handleCloseModal = () => {
-//     setShowModal(false);
-//   };
-
-//   const handleShowModal = () => {
-//     setShowModal(true);
-//   };
+//   const handleCloseModal = () => setShowModal(false);
+//   const handleShowModal = () => setShowModal(true);
 
 //   const handleSubmit = async (e: React.FormEvent) => {
 //     e.preventDefault();
@@ -160,7 +153,6 @@
 //     }
 //   };
 
-//   // --- CSV Upload Handler ---
 //   const handleCSVUpload = () => {
 //     if (!csvFile) {
 //       toast.error("Please select a CSV file first!");
@@ -243,6 +235,25 @@
 //     setShowModal(true);
 //   };
 
+//   // --- Filtering and Pagination ---
+//   const filteredData = store.filter(
+//     (item) =>
+//       item.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//       (typeof item.brand === "string"
+//         ? item.brand.toLowerCase().includes(searchTerm.toLowerCase())
+//         : item.brand?.brandName
+//             ?.toLowerCase()
+//             .includes(searchTerm.toLowerCase()))
+//   );
+
+//   const totalItems = filteredData.length;
+//   const totalPages = Math.ceil(totalItems / pageSize);
+//   const paginatedData = filteredData.slice(
+//     (currentPage - 1) * pageSize,
+//     currentPage * pageSize
+//   );
+
 //   const columns: Column<Stores>[] = [
 //     {
 //       Header: "ID",
@@ -275,7 +286,7 @@
 //       Header: "Brand",
 //       accessor: (row) =>
 //         typeof row.brand === "object" && row.brand !== null
-//           ? row.brand
+//           ? row.brand.brandName
 //           : row.brand ?? "N/A",
 //       width: 150,
 //     },
@@ -350,185 +361,196 @@
 //         </div>
 //       )}
 
-//       <Container>
+//       <Container style={{ fontSize: "11px" }}>
 //         <HeaderSection>
 //           <div>
-//             <Title>All Stores</Title>
+//             <Title style={{ fontSize: "14px" }}>All Stores</Title>
 //             <UserCount>({store.length})</UserCount>
 //           </div>
-//           <div>
-//             <div style={{ display: "flex", alignItems: "center" }}>
-//               <SearchInput type="text" placeholder="Search stores..." />
-//               <AddUserButton
-//                 onClick={() => {
-//                   setIsEditing(false);
-//                   setFormData({
-//                     storeName: "",
-//                     description: "",
-//                     latitude: null,
-//                     longitude: null,
-//                     brand: "",
-//                   });
-//                   handleShowModal();
-//                 }}
-//                 disabled={isSaving || isDeleting}
-//               >
-//                 Add Store
-//               </AddUserButton>
-//             </div>
-
-//             <Modal show={showModal} onHide={handleCloseModal}>
-//               <Modal.Header closeButton>
-//                 <Modal.Title style={{ color: "#1a8797" }}>
-//                   {isEditing ? "Edit Store" : "Add New Store"}
-//                 </Modal.Title>
-//               </Modal.Header>
-
-//               <Modal.Body>
-//                 <Tabs
-//                   activeKey={activeTab}
-//                   onSelect={(k) => setActiveTab(k || "manual")}
-//                 >
-//                   {/* Manual Entry Form */}
-//                   <Tab eventKey="manual" title="Manual Entry">
-//                     <Form onSubmit={handleSubmit}>
-//                       <Form.Group className="mb-3">
-//                         <Form.Label>Name</Form.Label>
-//                         <Form.Control
-//                           type="text"
-//                           name="storeName"
-//                           value={formData.storeName}
-//                           onChange={handleChange}
-//                           placeholder="Enter store name"
-//                           disabled={isSaving}
-//                         />
-//                       </Form.Group>
-
-//                       <Form.Group className="mb-3">
-//                         <Form.Label>Description</Form.Label>
-//                         <Form.Control
-//                           as="textarea"
-//                           name="description"
-//                           value={formData.description}
-//                           onChange={handleChange}
-//                           rows={3}
-//                           placeholder="Enter store description"
-//                           disabled={isSaving}
-//                         />
-//                       </Form.Group>
-
-//                       <Form.Group className="mb-3">
-//                         <Form.Label>Latitude</Form.Label>
-//                         <Form.Control
-//                           type="number"
-//                           name="latitude"
-//                           value={formData.latitude || ""}
-//                           onChange={handleChange}
-//                           placeholder="Enter latitude"
-//                           min="-90"
-//                           max="90"
-//                           step="0.000001"
-//                           disabled={isSaving}
-//                         />
-//                       </Form.Group>
-
-//                       <Form.Group className="mb-3">
-//                         <Form.Label>Longitude</Form.Label>
-//                         <Form.Control
-//                           type="number"
-//                           name="longitude"
-//                           value={formData.longitude || ""}
-//                           onChange={handleChange}
-//                           placeholder="Enter longitude"
-//                           min="-180"
-//                           max="180"
-//                           step="0.000001"
-//                           disabled={isSaving}
-//                         />
-//                       </Form.Group>
-
-//                       <Form.Group className="mb-3">
-//                         <Form.Label>Brand</Form.Label>
-//                         <Select
-//                           options={brands.map((brand) => ({
-//                             value: brand._id,
-//                             label: brand.brandName,
-//                           }))}
-//                           value={brands
-//                             .map((brand) => ({
-//                               value: brand._id,
-//                               label: brand.brandName,
-//                             }))
-//                             .find(
-//                               (option) => option.value === formData.brand
-//                             )}
-//                           onChange={handleBrandChange}
-//                           isSearchable
-//                           placeholder="Select a brand"
-//                           isDisabled={isSaving}
-//                         />
-//                       </Form.Group>
-
-//                       <AddUserButton type="submit" disabled={isSaving}>
-//                         {isSaving ? (
-//                           <ClipLoader size={15} color="#fff" />
-//                         ) : isEditing ? (
-//                           "Update Store"
-//                         ) : (
-//                           "Save Store"
-//                         )}
-//                       </AddUserButton>
-//                     </Form>
-//                   </Tab>
-
-//                   {/* CSV Upload Form */}
-//                   <Tab eventKey="csv" title="Import via CSV">
-//                     <Form.Group className="mb-3">
-//                       <Form.Label>Upload CSV</Form.Label>
-//                       <Form.Control
-//                         type="file"
-//                         accept=".csv"
-//                         onChange={(e) =>
-//                           setCsvFile(e.target.files?.[0] || null)
-//                         }
-//                         disabled={isSaving}
-//                       />
-//                       <small>
-//                         <a
-//                           href="/sample-stores.csv"
-//                           download
-//                           style={{ color: "#1a8797" }}
-//                         >
-//                           Download Sample CSV
-//                         </a>
-//                       </small>
-//                     </Form.Group>
-
-//                     <AddUserButton
-//                       type="button"
-//                       onClick={handleCSVUpload}
-//                       disabled={isSaving}
-//                     >
-//                       {isSaving ? (
-//                         <ClipLoader size={15} color="#fff" />
-//                       ) : (
-//                         "Upload CSV"
-//                       )}
-//                     </AddUserButton>
-//                   </Tab>
-//                 </Tabs>
-//               </Modal.Body>
-//             </Modal>
+//           <div style={{ display: "flex", alignItems: "center" }}>
+//             <SearchInput
+//               type="text"
+//               placeholder="Search stores..."
+//               value={searchTerm}
+//               onChange={(e) => setSearchTerm(e.target.value)}
+//               style={{ fontSize: "11px", padding: "8px 15px", width: "180px" }}
+//             />
+//             <AddUserButton
+//               onClick={() => {
+//                 setIsEditing(false);
+//                 setFormData({
+//                   storeName: "",
+//                   description: "",
+//                   latitude: null,
+//                   longitude: null,
+//                   brand: "",
+//                 });
+//                 handleShowModal();
+//               }}
+//               disabled={isSaving || isDeleting}
+//             >
+//               Add Store
+//             </AddUserButton>
 //           </div>
 //         </HeaderSection>
 
 //         <TableContainer
 //           columns={columns}
-//           data={store}
+//           data={paginatedData}
 //           isPagination={true}
 //           iscustomPageSize={true}
-//           className="table-responsive"
+//           pagination={{
+//             currentPage,
+//             totalPages,
+//             totalItems,
+//             pageSize,
+//           }}
+//           onPageChange={setCurrentPage}
+//           onPageSizeChange={setPageSize}
+//           showHeaderFilters={false}
 //         />
+
+//         {/* Modal code remains unchanged */}
+//         <Modal show={showModal} onHide={handleCloseModal}>
+//           <Modal.Header closeButton>
+//             <Modal.Title style={{ color: "#1a8797" }}>
+//               {isEditing ? "Edit Store" : "Add New Store"}
+//             </Modal.Title>
+//           </Modal.Header>
+
+//           <Modal.Body>
+//             <Tabs
+//               activeKey={activeTab}
+//               onSelect={(k) => setActiveTab(k || "manual")}
+//             >
+//               <Tab eventKey="manual" title="Manual Entry">
+//                 <Form onSubmit={handleSubmit}>
+//                   <Form.Group className="mb-3">
+//                     <Form.Label>Name</Form.Label>
+//                     <Form.Control
+//                       type="text"
+//                       name="storeName"
+//                       value={formData.storeName}
+//                       onChange={handleChange}
+//                       placeholder="Enter store name"
+//                       disabled={isSaving}
+//                     />
+//                   </Form.Group>
+
+//                   <Form.Group className="mb-3">
+//                     <Form.Label>Description</Form.Label>
+//                     <Form.Control
+//                       as="textarea"
+//                       name="description"
+//                       value={formData.description}
+//                       onChange={handleChange}
+//                       rows={3}
+//                       placeholder="Enter store description"
+//                       disabled={isSaving}
+//                     />
+//                   </Form.Group>
+
+//                   <Form.Group className="mb-3">
+//                     <Form.Label>Latitude</Form.Label>
+//                     <Form.Control
+//                       type="number"
+//                       name="latitude"
+//                       value={formData.latitude || ""}
+//                       onChange={handleChange}
+//                       placeholder="Enter latitude"
+//                       min="-90"
+//                       max="90"
+//                       step="0.000001"
+//                       disabled={isSaving}
+//                     />
+//                   </Form.Group>
+
+//                   <Form.Group className="mb-3">
+//                     <Form.Label>Longitude</Form.Label>
+//                     <Form.Control
+//                       type="number"
+//                       name="longitude"
+//                       value={formData.longitude || ""}
+//                       onChange={handleChange}
+//                       placeholder="Enter longitude"
+//                       min="-180"
+//                       max="180"
+//                       step="0.000001"
+//                       disabled={isSaving}
+//                     />
+//                   </Form.Group>
+
+//                   <Form.Group className="mb-3">
+//                     <Form.Label>Brand</Form.Label>
+//                     <Select
+//                       options={brands.map((brand) => ({
+//                         value: brand._id,
+//                         label: brand.brandName,
+//                       }))}
+//                       value={brands
+//                         .map((brand) => ({
+//                           value: brand._id,
+//                           label: brand.brandName,
+//                         }))
+//                         .find((option) => option.value === formData.brand)}
+//                       onChange={handleBrandChange}
+//                       isSearchable
+//                       placeholder="Select a brand"
+//                       isDisabled={isSaving}
+//                     />
+//                   </Form.Group>
+
+//                   <AddUserButton type="submit" disabled={isSaving}>
+//                     {isSaving ? (
+//                       <ClipLoader size={15} color="#fff" />
+//                     ) : isEditing ? (
+//                       "Update Store"
+//                     ) : (
+//                       "Save Store"
+//                     )}
+//                   </AddUserButton>
+//                 </Form>
+//               </Tab>
+
+//               <Tab eventKey="csv" title="Import via CSV">
+//                 <Form.Group className="mb-3">
+//                   <Form.Label>Upload CSV</Form.Label>
+//                   <Form.Control
+//                     type="file"
+//                     accept=".csv"
+//                     onChange={(e) => {
+//                       const target = e.target as HTMLInputElement;
+//                       setCsvFile(target.files?.[0] || null);
+//                     }}
+//                     disabled={isSaving}
+//                   />
+
+//                   <small>
+//                     <a
+//                       href="/sample-stores.csv"
+//                       download
+//                       style={{ color: "#1a8797" }}
+//                     >
+//                       Download Sample CSV
+//                     </a>
+//                   </small>
+//                 </Form.Group>
+
+//                 <AddUserButton
+//                   type="button"
+//                   onClick={handleCSVUpload}
+//                   disabled={isSaving}
+//                 >
+//                   {isSaving ? (
+//                     <ClipLoader size={15} color="#fff" />
+//                   ) : (
+//                     "Upload CSV"
+//                   )}
+//                 </AddUserButton>
+//               </Tab>
+//             </Tabs>
+//           </Modal.Body>
+//         </Modal>
 //       </Container>
 //     </div>
 //   );
@@ -540,8 +562,6 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Form, Tabs, Tab } from "react-bootstrap";
 import { toast } from "react-toastify";
-import Select from "react-select";
-import Papa from "papaparse";
 import {
   Container,
   HeaderSection,
@@ -550,34 +570,45 @@ import {
   SearchInput,
   AddUserButton,
 } from "../users/User.Styles";
-import { StoreApiResponse, Stores } from "../../type";
+import { StoreApiResponse } from "../../type";
 import {
   createStoreData,
   deleteStoreData,
   getStoresData,
+  importStoresFromCSV,
   updateStoreData,
 } from "../../services/store";
-import { getAllBrands } from "../../services/brandService";
 import TableContainer from "../TabConatiner/TableConatiner";
 import { Column } from "react-table";
 import { ClipLoader } from "react-spinners";
 
-interface Brand {
+interface Store {
   _id: string;
-  brandName: string;
+  customerNumber: string;
+  customerName: string;
+  address: string;
+  parish: string;
+  telephoneNumber: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  isActive: boolean;
 }
 
-type storeData = {
-  storeName: string;
-  description: string;
+type StoreData = {
+  customerNumber: string;
+  customerName: string;
+  address: string;
+  parish: string;
+  telephoneNumber: string;
   latitude: number | null;
   longitude: number | null;
-  brand: string;
+  isActive: boolean;
 };
 
 const Store: React.FC = () => {
-  const [store, setStores] = useState<Stores[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [storeId, setStoreId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -588,73 +619,142 @@ const Store: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
-  const [formData, setFormData] = useState<storeData>({
-    storeName: "",
-    description: "",
-    latitude: null,
-    longitude: null,
-    brand: "",
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    pageSize: 20, // Match backend default
   });
 
-  const [activeTab, setActiveTab] = useState("manual");
+  const [formData, setFormData] = useState<StoreData>({
+    customerNumber: "",
+    customerName: "",
+    address: "",
+    parish: "",
+    telephoneNumber: "",
+    latitude: null,
+    longitude: null,
+    isActive: true,
+  });
+
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState("manual");
+
+  const fetchData = async (page: number = 1, limit: number = 20) => {
+    setLoading(true);
+    try {
+      const storesData = await getStoresData(page, limit);
+      console.log("stores data", storesData);
+
+      setStores(storesData.stores);
+      setPagination({
+        currentPage: storesData.currentPage,
+        totalPages: storesData.totalPages,
+        totalCount: storesData.totalCount,
+        pageSize: limit,
+      });
+    } catch {
+      toast.error("Error fetching stores. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [storesData, brandsData] = await Promise.all([
-          getStoresData(),
-          getAllBrands(),
-        ]);
-        setStores(storesData.stores);
-        setBrands(brandsData);
-      } catch {
-        toast.error("Error fetching data. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchData(currentPage, pageSize);
+  }, [currentPage, pageSize]);
+
+  useEffect(() => {
+    fetchData(1, pagination.pageSize);
   }, []);
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchData(page, pagination.pageSize);
+  };
+
+  // Update the handlePageSizeChange function
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+    fetchData(1, size);
+  };
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]:
+        name === "latitude" || name === "longitude"
+          ? parseFloat(value) || null
+          : value,
     }));
   };
 
-  const handleBrandChange = (
-    selectedOption: { value: string; label: string } | null
-  ) => {
-    setFormData((prev) => ({ ...prev, brand: selectedOption?.value || "" }));
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: checked,
+    }));
   };
 
-  const handleCloseModal = () => setShowModal(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setFormData({
+      customerNumber: "",
+      customerName: "",
+      address: "",
+      parish: "",
+      telephoneNumber: "",
+      latitude: null,
+      longitude: null,
+      isActive: true,
+    });
+    setIsEditing(false);
+    setStoreId(null);
+  };
+
   const handleShowModal = () => setShowModal(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
-    const { storeName, description, longitude, latitude, brand } = formData;
-    if (!storeName || !description || !longitude || !latitude || !brand) {
-      toast.error("All fields are required!");
+    const {
+      customerNumber,
+      customerName,
+      address,
+      parish,
+      telephoneNumber,
+      latitude,
+      longitude,
+      isActive,
+    } = formData;
+    if (
+      !customerNumber ||
+      !customerName ||
+      !address ||
+      !parish ||
+      !telephoneNumber ||
+      latitude === null ||
+      longitude === null
+    ) {
+      toast.error("All fields except isActive are required!");
       setIsSaving(false);
       return;
     }
 
     const storeData = {
-      storeName,
-      description,
-      longitude: longitude.toString(),
+      customerNumber,
+      customerName,
+      address,
+      parish,
+      telephoneNumber,
       latitude: latitude.toString(),
-      brand,
+      longitude: longitude.toString(),
+      isActive,
     };
 
     try {
@@ -674,15 +774,6 @@ const Store: React.FC = () => {
         setStores((prevStores) => [...prevStores, storeResponse.store]);
       }
 
-      setFormData({
-        storeName: "",
-        description: "",
-        longitude: null,
-        latitude: null,
-        brand: "",
-      });
-
-      setIsEditing(false);
       handleCloseModal();
     } catch (error) {
       toast.error("Error submitting the store. Please try again later.");
@@ -691,55 +782,28 @@ const Store: React.FC = () => {
     }
   };
 
-  const handleCSVUpload = () => {
+  const handleCSVUpload = async () => {
     if (!csvFile) {
       toast.error("Please select a CSV file first!");
       return;
     }
 
-    Papa.parse(csvFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        const rows: any[] = results.data;
-        if (!rows.length) {
-          toast.error("CSV file is empty!");
-          return;
-        }
+    setIsSaving(true);
+    try {
+      const response = await importStoresFromCSV(csvFile);
+      toast.success(`Successfully imported ${response.count} stores!`);
 
-        setIsSaving(true);
-        try {
-          for (const row of rows) {
-            if (
-              !row.storeName ||
-              !row.description ||
-              !row.latitude ||
-              !row.longitude ||
-              !row.brand
-            ) {
-              continue; // skip invalid row
-            }
+      // Refresh the stores list
+      const storesData = await getStoresData();
+      setStores(storesData.stores);
 
-            const storeData = {
-              storeName: row.storeName,
-              description: row.description,
-              latitude: row.latitude,
-              longitude: row.longitude,
-              brand: row.brand,
-            };
-
-            const storeResponse = await createStoreData(storeData);
-            setStores((prev) => [...prev, storeResponse.store]);
-          }
-          toast.success("CSV imported successfully!");
-          handleCloseModal();
-        } catch (error) {
-          toast.error("Error importing CSV data!");
-        } finally {
-          setIsSaving(false);
-        }
-      },
-    });
+      handleCloseModal();
+    } catch (error: any) {
+      console.error("CSV import error:", error);
+      toast.error(error.response?.data?.message || "Error importing CSV file");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDeleteStore = async (store: { _id: string }) => {
@@ -759,74 +823,67 @@ const Store: React.FC = () => {
     }
   };
 
-  const handleEditStore = (store: Stores) => {
+  const handleEditStore = (store: Store) => {
     setFormData({
-      storeName: store.storeName,
-      description: store.description,
-      longitude: store.location?.longitude || null,
-      latitude: store.location?.latitude || null,
-      brand:
-        typeof store.brand === "object" ? store.brand._id : store.brand || "",
+      customerNumber: store.customerNumber,
+      customerName: store.customerName,
+      address: store.address,
+      parish: store.parish,
+      telephoneNumber: store.telephoneNumber,
+      latitude: store.location.latitude,
+      longitude: store.location.longitude,
+      isActive: store.isActive,
     });
     setStoreId(store._id);
     setIsEditing(true);
     setShowModal(true);
   };
 
-  // --- Filtering and Pagination ---
-  const filteredData = store.filter(
-    (item) =>
-      item.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (typeof item.brand === "string"
-        ? item.brand.toLowerCase().includes(searchTerm.toLowerCase())
-        : item.brand?.brandName
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()))
-  );
-
-  const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
-  const columns: Column<Stores>[] = [
+  const columns: Column<Store>[] = [
     {
       Header: "ID",
       accessor: (_row, index) => index + 1,
       width: 50,
     },
     {
-      Header: "Name",
-      accessor: "storeName",
+      Header: "Customer Number",
+      accessor: "customerNumber",
+      width: 120,
+    },
+    {
+      Header: "Customer Name",
+      accessor: "customerName",
       width: 150,
     },
     {
-      Header: "Description",
-      accessor: "description",
+      Header: "Address",
+      accessor: "address",
       width: 150,
+    },
+    {
+      Header: "Parish",
+      accessor: "parish",
+      width: 100,
+    },
+    {
+      Header: "Telephone",
+      accessor: "telephoneNumber",
+      width: 120,
     },
     {
       Header: "Latitude",
-      accessor: (row) =>
-        row.location?.latitude !== undefined ? row.location.latitude : "N/A",
+      accessor: (row) => row.location.latitude.toFixed(6),
       width: 100,
     },
     {
       Header: "Longitude",
-      accessor: (row) =>
-        row.location?.longitude !== undefined ? row.location.longitude : "N/A",
+      accessor: (row) => row.location.longitude.toFixed(6),
       width: 100,
     },
     {
-      Header: "Brand",
-      accessor: (row) =>
-        typeof row.brand === "object" && row.brand !== null
-          ? row.brand.brandName
-          : row.brand ?? "N/A",
-      width: 150,
+      Header: "Active",
+      accessor: (row) => (row.isActive ? "Yes" : "No"),
+      width: 80,
     },
     {
       Header: "Actions",
@@ -903,7 +960,7 @@ const Store: React.FC = () => {
         <HeaderSection>
           <div>
             <Title style={{ fontSize: "14px" }}>All Stores</Title>
-            <UserCount>({store.length})</UserCount>
+            <UserCount>({stores.length})</UserCount>
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
             <SearchInput
@@ -917,11 +974,14 @@ const Store: React.FC = () => {
               onClick={() => {
                 setIsEditing(false);
                 setFormData({
-                  storeName: "",
-                  description: "",
+                  customerNumber: "",
+                  customerName: "",
+                  address: "",
+                  parish: "",
+                  telephoneNumber: "",
                   latitude: null,
                   longitude: null,
-                  brand: "",
+                  isActive: true,
                 });
                 handleShowModal();
               }}
@@ -934,21 +994,20 @@ const Store: React.FC = () => {
 
         <TableContainer
           columns={columns}
-          data={paginatedData}
+          data={stores} // Use the stores from state (current page)
           isPagination={true}
           iscustomPageSize={true}
           pagination={{
-            currentPage,
-            totalPages,
-            totalItems,
-            pageSize,
+            currentPage: pagination.currentPage,
+            totalPages: pagination.totalPages,
+            totalItems: pagination.totalCount,
+            pageSize: pagination.pageSize,
           }}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           showHeaderFilters={false}
         />
 
-        {/* Modal code remains unchanged */}
         <Modal show={showModal} onHide={handleCloseModal}>
           <Modal.Header closeButton>
             <Modal.Title style={{ color: "#1a8797" }}>
@@ -964,26 +1023,61 @@ const Store: React.FC = () => {
               <Tab eventKey="manual" title="Manual Entry">
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Name</Form.Label>
+                    <Form.Label>Customer Number</Form.Label>
                     <Form.Control
                       type="text"
-                      name="storeName"
-                      value={formData.storeName}
+                      name="customerNumber"
+                      value={formData.customerNumber}
                       onChange={handleChange}
-                      placeholder="Enter store name"
+                      placeholder="Enter customer number"
                       disabled={isSaving}
                     />
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>Description</Form.Label>
+                    <Form.Label>Customer Name</Form.Label>
                     <Form.Control
-                      as="textarea"
-                      name="description"
-                      value={formData.description}
+                      type="text"
+                      name="customerName"
+                      value={formData.customerName}
                       onChange={handleChange}
-                      rows={3}
-                      placeholder="Enter store description"
+                      placeholder="Enter customer name"
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Address</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="Enter address"
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Parish</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="parish"
+                      value={formData.parish}
+                      onChange={handleChange}
+                      placeholder="Enter parish"
+                      disabled={isSaving}
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Telephone Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="telephoneNumber"
+                      value={formData.telephoneNumber}
+                      onChange={handleChange}
+                      placeholder="Enter telephone number"
                       disabled={isSaving}
                     />
                   </Form.Group>
@@ -1019,22 +1113,13 @@ const Store: React.FC = () => {
                   </Form.Group>
 
                   <Form.Group className="mb-3">
-                    <Form.Label>Brand</Form.Label>
-                    <Select
-                      options={brands.map((brand) => ({
-                        value: brand._id,
-                        label: brand.brandName,
-                      }))}
-                      value={brands
-                        .map((brand) => ({
-                          value: brand._id,
-                          label: brand.brandName,
-                        }))
-                        .find((option) => option.value === formData.brand)}
-                      onChange={handleBrandChange}
-                      isSearchable
-                      placeholder="Select a brand"
-                      isDisabled={isSaving}
+                    <Form.Label>Active</Form.Label>
+                    <Form.Check
+                      type="checkbox"
+                      name="isActive"
+                      checked={formData.isActive}
+                      onChange={handleCheckboxChange}
+                      disabled={isSaving}
                     />
                   </Form.Group>
 
@@ -1062,7 +1147,6 @@ const Store: React.FC = () => {
                     }}
                     disabled={isSaving}
                   />
-
                   <small>
                     <a
                       href="/sample-stores.csv"

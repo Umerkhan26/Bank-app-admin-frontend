@@ -13,35 +13,26 @@
 //   status: string;
 // }
 
-interface Location {
-  latitude: number;
-  longitude: number;
-}
-
 export interface Stores {
   _id: string;
-  isBlocked: boolean;
-  isActive: boolean;
-  id: number;
+  customerNumber: string;
+  customerName: string;
   storeName: string;
-  location: Location;
-  __v: number;
-  description: string;
-  action: string;
-  status: string;
-  brand:
-    | {
-        _id: string;
-        brandName: string;
-      }
-    | string;
+  address: string;
+  parish: string;
+  telephoneNumber: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  isActive: boolean;
+  __v?: number;
 }
 
 export interface StoreApiResponse {
   store: Stores;
   message: string;
 }
-
 export interface Campaigns {
   _id: string;
   isBlocked: boolean;
