@@ -843,47 +843,47 @@ const Store: React.FC = () => {
     {
       Header: "ID",
       accessor: (_row, index) => index + 1,
-      width: 50,
+      width: 30,
     },
     {
       Header: "Customer Number",
       accessor: "customerNumber",
-      width: 120,
+      width: 100,
     },
     {
       Header: "Customer Name",
       accessor: "customerName",
-      width: 150,
+      width: 120,
     },
     {
       Header: "Address",
       accessor: "address",
-      width: 150,
+      width: 120,
     },
     {
       Header: "Parish",
       accessor: "parish",
-      width: 100,
+      width: 90,
     },
     {
       Header: "Telephone",
       accessor: "telephoneNumber",
-      width: 120,
+      width: 100,
     },
     {
       Header: "Latitude",
       accessor: (row) => row.location.latitude.toFixed(6),
-      width: 100,
+      width: 80,
     },
     {
       Header: "Longitude",
       accessor: (row) => row.location.longitude.toFixed(6),
-      width: 100,
+      width: 80,
     },
     {
       Header: "Active",
       accessor: (row) => (row.isActive ? "Yes" : "No"),
-      width: 80,
+      width: 40,
     },
     {
       Header: "Actions",
