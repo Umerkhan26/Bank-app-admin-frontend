@@ -6,7 +6,7 @@ import {
   AdminPanel,
   Navbar,
   NavbarList,
-  NavbarItem,
+  // NavbarItem,
   AuthButtons,
   AdminName,
   Dropdown,
@@ -17,7 +17,7 @@ import {
   SidebarItem,
   SidebarLink,
   AdminContent,
-  NotificationIcon,
+  // NotificationIcon,
   DropdownIcon,
   ProfilePic,
   SearchBar,
@@ -209,9 +209,9 @@ const Admin: React.FC = () => {
           <Navbar>
             <SearchBar type="text" placeholder="Search..." />
             <NavbarList>
-              <NavbarItem to={""}>
+              {/* <NavbarItem to={"#"}>
                 <NotificationIcon className="fas fa-bell" />
-              </NavbarItem>
+              </NavbarItem> */}
             </NavbarList>
             <AuthButtons>
               <ProfilePic src={adminPic} alt="Admin Profile" />
