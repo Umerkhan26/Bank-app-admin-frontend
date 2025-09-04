@@ -325,6 +325,7 @@ import React, { useState, useEffect } from "react";
 import { Column } from "react-table";
 import {
   deleteUser,
+  exportUsersToCSV,
   fetchUsersData,
   updateUserStatus,
 } from "../../services/user";
@@ -366,27 +367,65 @@ const User: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const data = await fetchUsersData(currentPage, pageSize);
-      console.log("Fetched Users Response:", data);
+  // const loadData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await fetchUsersData(currentPage, pageSize);
+  //     console.log("Fetched Users Response:", data);
 
-      setUsers(data.users);
-      setTotalPages(data.totalPages);
-      setTotalItems(data.totalCount);
-    } catch (err) {
-      setError(err as Error);
-      toast.error("Failed to fetch users.");
-    } finally {
-      setLoading(false);
-    }
+  //     setUsers(data.users);
+  //     setTotalPages(data.totalPages);
+  //     setTotalItems(data.totalCount);
+  //   } catch (err) {
+  //     setError(err as Error);
+  //     toast.error("Failed to fetch users.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+useEffect(() => {
+  const handler = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+    setCurrentPage(1); // reset to first page when searching
+  }, 2000); // 500ms debounce delay
+
+  return () => {
+    clearTimeout(handler);
   };
+}, [searchTerm]);
+const loadData = async () => {
+  try {
+    setLoading(true);
+    const data = await fetchUsersData(
+      currentPage,
+      pageSize,
+      undefined,
+      debouncedSearch
+    );
 
-  useEffect(() => {
-    loadData();
-  }, [currentPage, pageSize]);
+    console.log("Fetched Users Response:", data);
+
+    if (data.users.length === 0) {
+      toast.info("No users found");
+    }
+
+    setUsers(data.users);
+    setTotalPages(data.totalPages);
+    setTotalItems(data.totalCount);
+  } catch (err) {
+    setError(err as Error);
+    toast.error("Failed to fetch users.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+useEffect(() => {
+  loadData();
+}, [currentPage, pageSize, debouncedSearch]);
 
   const toggleStatusButtons = (userId: string) => {
     setEditingStatusUserId(userId);
@@ -425,14 +464,26 @@ const User: React.FC = () => {
       toast.error("Failed to delete user.");
     }
   };
+const handleExport = async () => {
+  try {
+    await exportUsersToCSV();
+      toast.success("User CSV file downloaded successfully!");
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      alert(`Failed to export users: ${error.message}`);
+    } else {
+      alert("Failed to export users.");
+    }
+  }
+};
 
   // Client-side filter (applies to current page’s results only)
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.isActive ? "active" : "blocked").includes(searchTerm.toLowerCase())
-  );
+  // const filteredUsers = users.filter(
+  //   (user) =>
+  //     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     (user.isActive ? "active" : "blocked").includes(searchTerm.toLowerCase())
+  // );
 
   const columns: Column<User>[] = React.useMemo(
     () => [
@@ -598,46 +649,44 @@ const User: React.FC = () => {
     );
   }
 
-  return (
-    <Container>
-      <HeaderSection>
-        <div>
-          <Title>All Users</Title>
-          <UserCount>({totalItems})</UserCount>
-        </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <SearchInput
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-          <AddUserButton>Add User</AddUserButton>
-        </div>
-      </HeaderSection>
-
-      <div style={{ width: "100%", overflowX: "auto" }}>
-        <TableContainer
-          columns={columns}
-          data={filteredUsers}
-          isPagination={true}
-          iscustomPageSize={true}
-          pagination={{
-            currentPage,
-            totalPages,
-            totalItems,
-            pageSize,
-          }}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={setPageSize}
-          showHeaderFilters={false}
-        />
+return (
+  <Container>
+    <HeaderSection>
+      <div>
+        <Title>All Users</Title>
+        <UserCount>({totalItems})</UserCount>
       </div>
-    </Container>
-  );
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <SearchInput
+          type="text"
+          placeholder="Search users..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <AddUserButton onClick={handleExport}>Download Users</AddUserButton>
+      </div>
+    </HeaderSection>
+
+    {/* Always show the table, even if it's empty */}
+    <div style={{ width: "100%", overflowX: "auto" }}>
+      <TableContainer
+        columns={columns}
+        data={users} // 👈 empty array will show an empty table
+        isPagination={true}
+        iscustomPageSize={true}
+        pagination={{
+          currentPage,
+          totalPages,
+          totalItems,
+          pageSize,
+        }}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        showHeaderFilters={false}
+      />
+    </div>
+  </Container>
+);
 };
 
 export default User;
