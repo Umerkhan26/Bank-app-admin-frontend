@@ -31,11 +31,28 @@ export const createStoreData = async (storeData: {
   }
 };
 
-export const getStoresData = async (page: number = 1, limit: number = 20) => {
+// export const getStoresData = async (page: number = 1, limit: number = 20) => {
+//   try {
+//     const response = await axios.get(
+//       `${API_URL}/getStore?page=${page}&limit=${limit}`
+//     );
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching stores:", error);
+//     throw error;
+//   }
+// };
+
+
+export const getStoresData = async (
+  page: number = 1,
+  limit: number = 20,
+  search: string = ""
+) => {
   try {
-    const response = await axios.get(
-      `${API_URL}/getStore?page=${page}&limit=${limit}`
-    );
+    const response = await axios.get(`${API_URL}/getStore`, {
+      params: { page, limit, search }, // ✅ include search in query params
+    });
     return response.data;
   } catch (error) {
     console.error("Error fetching stores:", error);

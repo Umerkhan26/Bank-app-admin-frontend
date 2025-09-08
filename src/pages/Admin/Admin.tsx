@@ -20,7 +20,7 @@ import {
   // NotificationIcon,
   DropdownIcon,
   ProfilePic,
-  SearchBar,
+  // SearchBar,
   Logo,
   SidebarHeader,
   SidebarIcon,
@@ -207,7 +207,7 @@ const Admin: React.FC = () => {
 
         <div>
           <Navbar>
-            <SearchBar type="text" placeholder="Search..." />
+            {/* <SearchBar type="text" placeholder="Search..." /> */}
             <NavbarList>
               {/* <NavbarItem to={"#"}>
                 <NotificationIcon className="fas fa-bell" />
