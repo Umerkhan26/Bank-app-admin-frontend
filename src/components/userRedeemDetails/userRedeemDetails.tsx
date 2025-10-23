@@ -243,6 +243,7 @@ const UserRedeemDetails: React.FC = () => {
         const campaigns: CampaignWithLeaderboard[] =
           await fetchCampaignsWithLeaderboard();
         const rows: LeaderboardRow[] = [];
+        console.log("Fetched campaigns:", campaigns);
 
         campaigns.forEach((campaign) => {
           const brandName =
@@ -320,6 +321,11 @@ const UserRedeemDetails: React.FC = () => {
           item.brandName.toLowerCase().includes(searchTerm.toLowerCase())
       ),
     [leaderboardData, searchTerm]
+  );
+
+  const totalRedeemCount = filteredData.reduce(
+    (acc, item) => acc + item.totalRedeems,
+    0
   );
 
   const totalItems = filteredData.length;
@@ -442,6 +448,7 @@ const UserRedeemDetails: React.FC = () => {
               backgroundColor: row.index % 2 === 0 ? "#f9f9f9" : "white",
             },
           })}
+          footerText={`Total Campaigns Redeem: ${totalRedeemCount} items `}
         />
       </div>
     </Container>

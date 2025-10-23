@@ -4,6 +4,7 @@ import { API_URL } from "./brandService";
 export interface IBankPremium {
   _id: string;
   title: string;
+
   description: string;
   points_required: string;
   start_date: string;
@@ -124,6 +125,7 @@ export const updateRedemptionStatus = async (
     );
   }
 };
+
 export const getBankPremiumsWithStats = async (): Promise<
   BankPremiumWithLeaderboard[]
 > => {
@@ -149,10 +151,25 @@ export const getBankPremiumsWithStats = async (): Promise<
     return bankPremiums.map((premium) => ({
       ...premium,
       enrolled_users_count: premium.enrolled_users?.length || 0,
-      redemption_count: premium.redemptions?.length || 0,
+      redemption_count: (premium as any).stats?.totalRedemptions || 0,
     }));
   } catch (error: any) {
     console.error("Error fetching bank premiums:", error);
     throw new Error("Failed to fetch bank premiums");
   }
+};
+
+export const exportBankPremiumsCSV = async () => {
+  const { data } = await axios.get(`${API_URL}/exportCSVForBankPrem`, {
+    responseType: "blob", // important to get file as blob
+  });
+
+  // Create download link
+  const url = window.URL.createObjectURL(new Blob([data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", "bank_premiums.csv");
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 };

@@ -1,274 +1,3 @@
-// // components/BankPremiumRedeem/BankPremiumRedeem.tsx
-// import React, { useState, useEffect } from "react";
-// import "bootstrap/dist/css/bootstrap.min.css";
-// import TableContainer from "../TabConatiner/TableConatiner";
-// import { ClipLoader } from "react-spinners";
-// import { toast } from "react-toastify";
-// import {
-//   Container,
-//   HeaderSection,
-//   Title,
-//   PremiumCount,
-//   SearchInput,
-//   VerifyButton,
-//   CodeInput,
-//   VerificationSection,
-//   StatusMessage,
-// } from "./BankPremiumRedeem.Styles";
-// import {
-//   getBankPremiumsWithStats,
-//   verifyRedemptionCode,
-// } from "../../services/bankPremiumService";
-// import { Column } from "react-table";
-
-// interface BankPremiumRow {
-//   id: string;
-//   title: string;
-//   code: string;
-//   status: string;
-//   redeemedAt: string;
-//   bankPremiumId: string;
-//   userName: string;
-//   userEmail: string;
-//   userAddress: string;
-//   userParish: string;
-// }
-
-// const BankPremiumRedeem: React.FC = () => {
-//   const [bankPremiums, setBankPremiums] = useState<BankPremiumRow[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState<Error | null>(null);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [pageSize, setPageSize] = useState(10);
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [verificationCode, setVerificationCode] = useState("");
-//   const [verifying, setVerifying] = useState(false);
-//   const [verificationStatus, setVerificationStatus] = useState<{
-//     success: boolean;
-//     message: string;
-//   } | null>(null);
-
-//   useEffect(() => {
-//     const loadData = async () => {
-//       try {
-//         const premiums: any[] = await getBankPremiumsWithStats(); // API returns your provided data
-
-//         const rows: BankPremiumRow[] = premiums.map((p) => ({
-//           id: p.code,
-//           title: p.title,
-//           code: p.code,
-//           status: p.status,
-//           redeemedAt: new Date(p.redeemedAt).toLocaleString(),
-//           bankPremiumId: p.bankPremiumId,
-//           userName: p.user?.name || "-",
-//           userEmail: p.user?.email || "-",
-//           userAddress: p.user?.address || "-",
-//           userParish: p.user?.parish || "-",
-//         }));
-
-//         setBankPremiums(rows);
-//       } catch (err: any) {
-//         setError(err);
-//         toast.error(err.message || "Failed to fetch bank premiums.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     loadData();
-//   }, []);
-
-//   const handleVerifyCode = async () => {
-//     if (!verificationCode.trim()) {
-//       toast.error("Please enter a verification code");
-//       return;
-//     }
-
-//     setVerifying(true);
-//     setVerificationStatus(null);
-
-//     try {
-//       const result = await verifyRedemptionCode(verificationCode.trim());
-//       setVerificationStatus({
-//         success: true,
-//         message: result.message || "Premium delivered successfully!",
-//       });
-//       setVerificationCode("");
-//       toast.success("Code verified successfully!");
-
-//       // Refresh data
-//       const premiums: any[] = await getBankPremiumsWithStats();
-//       const rows: BankPremiumRow[] = premiums.map((p) => ({
-//         id: p.code,
-//         title: p.title,
-//         code: p.code,
-//         status: p.status,
-//         redeemedAt: new Date(p.redeemedAt).toLocaleString(),
-//         bankPremiumId: p.bankPremiumId,
-//         userName: p.user?.name || "-",
-//         userEmail: p.user?.email || "-",
-//         userAddress: p.user?.address || "-",
-//         userParish: p.user?.parish || "-",
-//       }));
-//       setBankPremiums(rows);
-//     } catch (err: any) {
-//       setVerificationStatus({
-//         success: false,
-//         message: err.message || "Failed to verify code",
-//       });
-//       toast.error(err.message || "Failed to verify code");
-//     } finally {
-//       setVerifying(false);
-//     }
-//   };
-
-//   // Filter data
-//   const filteredData = bankPremiums.filter(
-//     (item) =>
-//       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       item.userName.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
-//   const totalItems = filteredData.length;
-//   const totalPages = Math.ceil(totalItems / pageSize);
-//   const paginatedData = filteredData.slice(
-//     (currentPage - 1) * pageSize,
-//     currentPage * pageSize
-//   );
-
-//   const columns: Column<BankPremiumRow>[] = [
-//     {
-//       Header: "#",
-//       accessor: (_row: any, index: number) =>
-//         (currentPage - 1) * pageSize + index + 1,
-//       width: 30,
-//     },
-//     { Header: "Title", accessor: "title", width: 150 },
-//     { Header: "Code", accessor: "code", width: 90 },
-//     { Header: "Redeemed At", accessor: "redeemedAt", width: 150 },
-//     { Header: "User Name", accessor: "userName", width: 80 },
-//     { Header: "Email", accessor: "userEmail", width: 130 },
-//     { Header: "Address", accessor: "userAddress", width: 60 },
-//     { Header: "Parish", accessor: "userParish", width: 100 },
-//     { Header: "Status", accessor: "status", width: 80 },
-//   ];
-
-//   if (loading)
-//     return (
-//       <div
-//         style={{
-//           position: "fixed",
-//           top: 0,
-//           left: 0,
-//           width: "100vw",
-//           height: "100vh",
-//           backgroundColor: "rgba(255,255,255,0.6)",
-//           display: "flex",
-//           justifyContent: "center",
-//           alignItems: "center",
-//           zIndex: 9999,
-//         }}
-//       >
-//         <ClipLoader size={25} color="#1a8797" />
-//       </div>
-//     );
-
-//   if (error)
-//     return (
-//       <Container>
-//         <div
-//           style={{
-//             color: "red",
-//             textAlign: "center",
-//             padding: "20px",
-//             backgroundColor: "#ffe6e6",
-//             borderRadius: "4px",
-//             border: "1px solid #ffcccc",
-//           }}
-//         >
-//           Error loading data: {error.message}
-//         </div>
-//       </Container>
-//     );
-
-//   return (
-//     <Container style={{ fontSize: "11px" }}>
-//       <HeaderSection>
-//         <div>
-//           <Title style={{ fontSize: "14px" }}>Bank Premium Redemptions</Title>
-//           <PremiumCount>({bankPremiums.length} premiums)</PremiumCount>
-//         </div>
-//         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-//           <SearchInput
-//             type="text"
-//             placeholder="Search by title/code/user..."
-//             value={searchTerm}
-//             onChange={(e) => setSearchTerm(e.target.value)}
-//             style={{ fontSize: "11px", padding: "8px 15px", width: "180px" }}
-//           />
-//         </div>
-//       </HeaderSection>
-
-//       <VerificationSection>
-//         <div
-//           style={{
-//             display: "flex",
-//             alignItems: "center",
-//             gap: "10px",
-//             marginBottom: "10px",
-//           }}
-//         >
-//           <CodeInput
-//             type="text"
-//             placeholder="Enter redemption code..."
-//             value={verificationCode}
-//             onChange={(e) => setVerificationCode(e.target.value.toUpperCase())}
-//             style={{ fontSize: "11px", padding: "3px 5px", width: "150px" }}
-//             onKeyPress={(e) => e.key === "Enter" && handleVerifyCode()}
-//             disabled={verifying}
-//           />
-//           <VerifyButton
-//             onClick={handleVerifyCode}
-//             disabled={verifying}
-//             style={{ fontSize: "11px", padding: "4px 8px" }}
-//           >
-//             {verifying ? <ClipLoader size={10} color="#fff" /> : "Verify Code"}
-//           </VerifyButton>
-//         </div>
-//         {verificationStatus && (
-//           <StatusMessage success={verificationStatus.success}>
-//             {verificationStatus.message}
-//           </StatusMessage>
-//         )}
-//       </VerificationSection>
-
-//       <div style={{ width: "100%", overflowX: "auto" }}>
-//         <TableContainer
-//           columns={columns}
-//           data={paginatedData}
-//           isPagination={true}
-//           iscustomPageSize={true}
-//           pagination={{
-//             currentPage,
-//             totalPages,
-//             totalItems,
-//             pageSize,
-//           }}
-//           onPageChange={setCurrentPage}
-//           onPageSizeChange={setPageSize}
-//           showHeaderFilters={false}
-//         />
-//       </div>
-//     </Container>
-//   );
-// };
-
-// export default BankPremiumRedeem;
-
-// components/BankPremiumRedeem/BankPremiumRedeem.tsx
-
-// components/BankPremiumRedeem/BankPremiumRedeem.tsx
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import TableContainer from "../TabConatiner/TableConatiner";
@@ -280,8 +9,10 @@ import {
   Title,
   PremiumCount,
   SearchInput,
+  AddUserButton,
 } from "./BankPremiumRedeem.Styles";
 import {
+  exportBankPremiumsCSV,
   getBankPremiumsWithStats,
   updateRedemptionStatus,
 } from "../../services/bankPremiumService";
@@ -298,6 +29,7 @@ interface BankPremiumRow {
   userEmail: string;
   userAddress: string;
   userParish: string;
+  totalRedemptions: number;
 }
 type RedemptionStatus = "pending" | "delivered";
 
@@ -313,6 +45,7 @@ const BankPremiumRedeem: React.FC = () => {
     const loadData = async () => {
       try {
         const premiums: any[] = await getBankPremiumsWithStats();
+        console.log("bank premeeee", premiums);
         const rows: BankPremiumRow[] = premiums.map((p) => ({
           id: p.code,
           title: p.title,
@@ -324,6 +57,7 @@ const BankPremiumRedeem: React.FC = () => {
           userEmail: p.user?.email || "-",
           userAddress: p.user?.address || "-",
           userParish: p.user?.parish || "-",
+          totalRedemptions: p.stats?.totalRedemptions || 0,
         }));
         setBankPremiums(rows);
       } catch (err: any) {
@@ -371,7 +105,7 @@ const BankPremiumRedeem: React.FC = () => {
     { Header: "Redeemed At", accessor: "redeemedAt", width: 150 },
     { Header: "User Name", accessor: "userName", width: 70 },
     { Header: "Email", accessor: "userEmail", width: 120 },
-    { Header: "Address", accessor: "userAddress", width: 60 },
+    // { Header: "Total Redemptions", accessor: "totalRedemptions", width: 80 },
     { Header: "Parish", accessor: "userParish", width: 100 },
     {
       Header: "Status",
@@ -412,6 +146,15 @@ const BankPremiumRedeem: React.FC = () => {
       },
     },
   ];
+
+  const handleExport = async () => {
+    try {
+      await exportBankPremiumsCSV();
+      toast.success("CSV downloaded successfully!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export CSV");
+    }
+  };
 
   if (loading)
     return (
@@ -466,6 +209,7 @@ const BankPremiumRedeem: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ fontSize: "11px", padding: "8px 15px", width: "180px" }}
           />
+          <AddUserButton onClick={handleExport}>Download CSV</AddUserButton>
         </div>
       </HeaderSection>
 

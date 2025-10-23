@@ -9,6 +9,15 @@ export const Container = styled.div`
   margin: 20px;
 `;
 
+export const AddUserButton = styled.button`
+  padding: 8px 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #1a8797;
+  color: white;
+  cursor: pointer;
+`;
+
 export const HeaderSection = styled.div`
   display: flex;
   justify-content: space-between;

@@ -1,5 +1,3 @@
-
-
 import React, { Fragment, useState } from "react";
 import PropTypes from "prop-types";
 import {
@@ -36,6 +34,7 @@ type EnhancedColumn<T extends object> = ColumnInstance<T> &
 interface Pagination {
   currentPage: number;
   totalPages: number;
+  footerText?: string;
   totalItems: number;
   pageSize: number;
 }
@@ -57,6 +56,7 @@ interface TableContainerProps<T extends object> {
   rowProps?: (
     row: ReactTableRow<T>
   ) => React.HTMLAttributes<HTMLTableRowElement>;
+  footerText?: string;
 }
 
 // Filter Components
@@ -148,6 +148,7 @@ const TableContainer = <T extends object>({
   onPageSizeChange = () => {},
   showHeaderFilters = false,
   tableStyle,
+  footerText,
 }: TableContainerProps<T>) => {
   // Notice the generic <T> here with plugins used
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
@@ -356,9 +357,26 @@ const TableContainer = <T extends object>({
             </div>
           </Col>
           <Col md={3} className="text-md-end">
-            <span style={{ fontSize: "14px" }}>
+            <span style={{ fontSize: "14px", fontWeight: "500 " }}>
               Total: {pagination.totalItems} items
             </span>
+          </Col>
+
+          {/* <Col md={3} className="text-md-end">
+            <span style={{ fontSize: "14px" }}>
+              Total: {pagination.footerText} R
+            </span>
+          </Col> */}
+          {/* {footerText && (
+            <div style={{ marginTop: "10px", fontSize: "0.85rem" }}>
+              {footerText}
+            </div>
+          )} */}
+
+          <Col md={3} className="text-md-end">
+            <div style={{ fontSize: "14px", fontWeight: "500 " }}>
+              {footerText && <span>{footerText}</span>}
+            </div>
           </Col>
         </Row>
       )}
