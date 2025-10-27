@@ -1,6 +1,15 @@
 import axios from "axios";
 import { API_URL } from "./brandService";
 
+interface BulkInsertProgress {
+  percent: number;
+  insertedCount: number;
+  skippedCount: number;
+  total: number;
+  done: boolean;
+  batch?: number;
+}
+
 export const createqrcodeData = async (qrcodeData: any) => {
   const token = localStorage.getItem("token");
 
@@ -26,19 +35,6 @@ export const createqrcodeData = async (qrcodeData: any) => {
     throw new Error("Failed to create QR code");
   }
 };
-
-// export const getqrcodeData = async (page: number = 1, limit: number = 20) => {
-//   try {
-//     const response = await axios.get(`${API_URL}/getqrCode`, {
-//       params: { page, limit },
-//     });
-//     console.log("response from get qr code api", response);
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error fetching QR code data:", error);
-//     throw error;
-//   }
-// };
 
 export const getqrcodeData = async (
   page: number = 1,
@@ -140,4 +136,61 @@ export const bulkUploadQRCodes = async (file: File) => {
     }
     throw new Error("Failed to upload QR codes");
   }
+};
+
+export const bulkUploadQRCodesOptimized = async (
+  file: File,
+  token: string
+): Promise<any> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/import-optimized`, {
+    // Adjust base URL if needed (e.g., full API endpoint)
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Upload failed");
+  }
+
+  return response.json();
+};
+
+export const listenToUploadProgress = (
+  onProgress: (data: BulkInsertProgress) => void,
+  onError?: (err: Event) => void,
+  onClose?: () => void
+): (() => void) => {
+  const eventSource = new EventSource(`${API_URL}/import-progress`); // Adjust base URL if needed
+
+  eventSource.onmessage = (event) => {
+    try {
+      const data: BulkInsertProgress = JSON.parse(event.data);
+      onProgress(data);
+    } catch (parseErr) {
+      console.error("Failed to parse progress data:", parseErr);
+    }
+  };
+
+  eventSource.onerror = (err) => {
+    console.error("SSE error:", err);
+    if (onError) onError(err);
+    eventSource.close();
+    if (onClose) onClose();
+  };
+
+  eventSource.onopen = () => {
+    console.log("SSE connection opened");
+  };
+
+  return () => {
+    eventSource.close();
+    console.log("SSE connection closed");
+  };
 };
