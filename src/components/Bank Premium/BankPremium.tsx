@@ -50,6 +50,7 @@ const BankPremium: React.FC = () => {
     image: File | null;
     active: boolean;
     brand: string;
+    qty: string;
   }>({
     title: "",
     description: "",
@@ -59,6 +60,7 @@ const BankPremium: React.FC = () => {
     image: null,
     active: true,
     brand: "",
+    qty: "",
   });
 
   useEffect(() => {
@@ -66,7 +68,6 @@ const BankPremium: React.FC = () => {
       setLoading(true);
       try {
         const premiumData = await getAllBankPremiums();
-        console.log("all bankpremium ", premiumData);
         const brandData = await getAllBrands();
         setBankPremiums(premiumData);
         setBrands(brandData);
@@ -88,6 +89,7 @@ const BankPremium: React.FC = () => {
       image: null,
       active: true,
       brand: "",
+      qty: "",
     });
     setShowModal(false);
     setIsEditMode(false);
@@ -134,6 +136,9 @@ const BankPremium: React.FC = () => {
       if (premiumForm.brand) {
         formData.append("brand", premiumForm.brand);
       }
+      if (premiumForm.qty) {
+        formData.append("qty", premiumForm.qty);
+      }
 
       const response =
         isEditMode && selectedPremiumId
@@ -175,6 +180,7 @@ const BankPremium: React.FC = () => {
       image: null,
       active: premium.active,
       brand: premium.brand || "",
+      qty: premium.qty?.toString() || "",
     });
     setShowModal(true);
   };
@@ -307,6 +313,15 @@ const BankPremium: React.FC = () => {
         ),
         width: 180,
       },
+
+      {
+        Header: "Quantity",
+        accessor: "qty",
+        Cell: ({ value }: CellProps<IBankPremium, IBankPremium["qty"]>) =>
+          value !== null && value !== undefined ? value : "—",
+        width: 80,
+      },
+
       {
         Header: "Actions",
         id: "actions",
@@ -340,7 +355,7 @@ const BankPremium: React.FC = () => {
         style={{
           position: "fixed",
           top: 0,
-          left: 0,
+          left: 100,
           width: "100vw",
           height: "100vh",
           backgroundColor: "rgba(255, 255, 255, 0.6)",
@@ -476,6 +491,18 @@ const BankPremium: React.FC = () => {
                     </option>
                   ))}
                 </Form.Select>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Quantity (Qty)</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="qty"
+                  value={premiumForm.qty}
+                  onChange={handleChange}
+                  placeholder="Enter available quantity"
+                  min="0"
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">

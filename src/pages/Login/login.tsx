@@ -53,7 +53,6 @@ const Login: React.FC = () => {
 
     // Listen for foreground messages
     onForegroundMessage((payload) => {
-      console.log("Foreground message received:", payload);
       const { notification: { title, body } = {} } = payload;
       setNotification({ title: title || "New Notification", body: body || "" });
       toast.info(
@@ -143,7 +142,6 @@ const Login: React.FC = () => {
           timeout: 10000,
         }
       );
-      console.log("FCM token update response:", response.data);
 
       toast.update(fcmToast, {
         render: "Push notifications enabled!",

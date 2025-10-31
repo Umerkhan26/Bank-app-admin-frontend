@@ -35,7 +35,7 @@ interface Pagination {
   currentPage: number;
   totalPages: number;
   footerText?: string;
-  totalItems: number;
+  totalItems?: number;
   pageSize: number;
 }
 
@@ -356,9 +356,12 @@ const TableContainer = <T extends object>({
               </Button>
             </div>
           </Col>
+
           <Col md={3} className="text-md-end">
-            <span style={{ fontSize: "14px", fontWeight: "500 " }}>
-              Total: {pagination.totalItems} items
+            <span style={{ fontSize: "14px", fontWeight: "500" }}>
+              {pagination.totalItems
+                ? `Total: ${pagination.totalItems} items`
+                : ""}
             </span>
           </Col>
 

@@ -43,7 +43,6 @@ const UserRedeemDetails: React.FC = () => {
         const campaigns: CampaignWithLeaderboard[] =
           await fetchCampaignsWithLeaderboard();
         const rows: LeaderboardRow[] = [];
-        console.log("Fetched campaigns:", campaigns);
 
         campaigns.forEach((campaign) => {
           const brandName =
@@ -191,7 +190,7 @@ const UserRedeemDetails: React.FC = () => {
         style={{
           position: "fixed",
           top: 0,
-          left: 0,
+          left: 100,
           width: "100vw",
           height: "100vh",
           backgroundColor: "rgba(255, 255, 255, 0.6)",
@@ -201,7 +200,7 @@ const UserRedeemDetails: React.FC = () => {
           alignItems: "center",
         }}
       >
-        <ClipLoader size={25} color="#1a8797" />
+        <ClipLoader size={40} color="#1a8797" />
       </div>
     );
   }

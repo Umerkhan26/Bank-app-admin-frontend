@@ -127,9 +127,6 @@ export const updateCampaignData = async (
     throw new Error("Authorization token is missing");
   }
 
-  console.log("Updating campaign with ID:", campaignId);
-  console.log("FormData:", Array.from(formData.entries()));
-
   try {
     const response = await axios.put(
       `${API_URL}/updateCampaigns/${campaignId}`,
@@ -154,8 +151,6 @@ export const deleteCampaignData = async (campaignId: string) => {
   if (!token) {
     throw new Error("Authorization token is missing");
   }
-
-  console.log("Deleting campaign with ID:", campaignId);
 
   if (!/^[0-9a-fA-F]{24}$/.test(campaignId)) {
     throw new Error("Invalid campaign ID format");
@@ -212,7 +207,6 @@ export const fetchCampaignsWithLeaderboard = async (): Promise<
         Authorization: `Bearer ${token}`,
       },
     });
-    console.log("response from leaderBoard", response);
     return response.data; // should return array of CampaignWithLeaderboard
   } catch (error) {
     console.error("Error fetching campaigns with leaderboard:", error);

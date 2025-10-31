@@ -158,7 +158,6 @@ const Notifications: React.FC = () => {
         setUserCount(null);
         return;
       }
-      console.log("Fetching user count for city:", trimmedCity);
 
       setIsFetchingCount(true);
       try {
@@ -176,12 +175,6 @@ const Notifications: React.FC = () => {
               Authorization: `Bearer ${token}`,
             },
           }
-        );
-        console.log(
-          "➡️ Axios GET to:",
-          `${API_URL}/get-all-users-by-address?address=${encodeURIComponent(
-            trimmedCity
-          )}`
         );
 
         setUserCount(response.data.count);

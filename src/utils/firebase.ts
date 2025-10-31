@@ -29,14 +29,12 @@ let messaging: Messaging;
 
 const initMessaging = async (): Promise<Messaging | null> => {
   try {
-    console.log("[FIREBASE] Initializing messaging...");
     const isSupportedBrowser = await isSupported();
     if (!isSupportedBrowser) {
       console.warn("[FIREBASE] Messaging not supported in this browser");
       return null;
     }
     messaging = getMessaging(app);
-    console.log("[FIREBASE] Messaging initialized successfully");
     return messaging;
   } catch (error) {
     console.error("[FIREBASE] Error initializing messaging:", error);
@@ -50,7 +48,6 @@ export const requestNotificationPermission = async (): Promise<
   string | null
 > => {
   try {
-    console.log("[FIREBASE] Requesting notification permission...");
     const messagingInstance = await messagingPromise;
     if (!messagingInstance) {
       console.warn("[FIREBASE] Messaging not available");
@@ -61,10 +58,8 @@ export const requestNotificationPermission = async (): Promise<
       "/firebase-messaging-sw.js",
       { scope: "/firebase-cloud-messaging-push-scope" }
     );
-    console.log("[FIREBASE] Service worker registered:", registration);
 
     const permission = await Notification.requestPermission();
-    console.log("[FIREBASE] Notification permission:", permission);
 
     if (permission !== "granted") {
       console.warn("[FIREBASE] Notification permission denied");
@@ -77,7 +72,6 @@ export const requestNotificationPermission = async (): Promise<
       serviceWorkerRegistration: registration,
     });
 
-    console.log("[FIREBASE] ✅ FCM Token obtained:", token);
     return token;
   } catch (error) {
     console.error("[FIREBASE] Error getting FCM token:", error);
@@ -87,13 +81,11 @@ export const requestNotificationPermission = async (): Promise<
 
 export const refreshFcmToken = async (): Promise<string | null> => {
   try {
-    console.log("[FIREBASE] Refreshing FCM token...");
     const messagingInstance = await messagingPromise;
     if (!messagingInstance) return null;
 
     // Delete existing token
     await deleteToken(messagingInstance);
-    console.log("[FIREBASE] Previous FCM token deleted");
 
     const registration = await navigator.serviceWorker.register(
       "/firebase-messaging-sw.js",
@@ -112,7 +104,6 @@ export const refreshFcmToken = async (): Promise<string | null> => {
       serviceWorkerRegistration: registration,
     });
 
-    console.log("[FIREBASE] ✅ New FCM Token:", token);
     return token;
   } catch (error) {
     console.error("[FIREBASE] Error refreshing FCM token:", error);
@@ -123,12 +114,9 @@ export const refreshFcmToken = async (): Promise<string | null> => {
 export const onForegroundMessage = (
   callback: (payload: MessagePayload) => void
 ) => {
-  console.log("[FIREBASE] Setting up foreground message listener");
-
   return messagingPromise.then((messagingInstance: Messaging | null) => {
     if (messagingInstance) {
       const unsubscribe = onMessage(messagingInstance, (payload) => {
-        console.log("[FIREBASE] Foreground message received:", payload);
         callback(payload);
 
         if (payload.notification) {

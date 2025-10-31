@@ -53,9 +53,14 @@ const Brand: React.FC = () => {
       try {
         setLoading(true);
         const data = await getAllBrands();
-        console.log("All brands");
-        setBrands(data);
-      } catch {
+
+        // 👇 Handle if your service returns an object with 'brands'
+        setBrands(data.brands || data);
+      } catch (error) {
+        console.error("Failed to fetch brands:", error);
+        toast.error("Failed to fetch brands");
+      } finally {
+        // ✅ Always stop loading
         setLoading(false);
       }
     };
@@ -277,7 +282,7 @@ const Brand: React.FC = () => {
         style={{
           position: "fixed",
           top: 0,
-          left: 0,
+          left: 100,
           width: "100vw",
           height: "100vh",
           backgroundColor: "rgba(255,255,255,0.6)",

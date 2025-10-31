@@ -15,7 +15,6 @@ export const createBrand = async (formData: FormData) => {
 export const getAllBrands = async () => {
   try {
     const response = await axios.get(`${API_URL}/getAllBrands`);
-    console.log("response from create brand", response);
     return response.data.brands;
   } catch (error) {
     console.error("Error fetching brands:", error);

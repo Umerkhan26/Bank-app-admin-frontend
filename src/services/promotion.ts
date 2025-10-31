@@ -63,7 +63,6 @@ export const updatePromotionData = async (
         },
       }
     );
-    console.log("API response for update:", response);
     return response.data;
   } catch (error) {
     console.error("Error updating campaign:", error);
@@ -77,8 +76,6 @@ export const deletePromotionData = async (promotionId: string) => {
   if (!token) {
     throw new Error("Authorization token is missing");
   }
-
-  console.log("Deleting campaign with ID:", promotionId);
 
   if (!/^[0-9a-fA-F]{24}$/.test(promotionId)) {
     throw new Error("Invalid campaign ID format");

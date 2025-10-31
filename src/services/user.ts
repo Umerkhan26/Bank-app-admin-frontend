@@ -24,7 +24,7 @@ export const fetchUsersData = async (
       params: { page, limit, brandId, search },
     });
 
-    return response.data; // contains { users, totalCount, totalPages, currentPage }
+    return response.data;
   } catch (error) {
     console.error("Error fetching user data:", error);
     throw error;
@@ -58,7 +58,6 @@ export const deleteUser = async (userId: string) => {
     throw new Error("Failed to delete user");
   }
 };
-
 
 // ✅ Export users to CSV
 export const exportUsersToCSV = async () => {

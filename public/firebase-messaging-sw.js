@@ -26,12 +26,6 @@ const NOTIFICATION_BADGE = "/badge.png";
 
 // Enhanced background message handler
 messaging.onBackgroundMessage((payload) => {
-  console.log("[SW] Received background message:", {
-    ...payload,
-    notification: payload.notification,
-    data: payload.data,
-  });
-
   const notificationTitle = payload.notification?.title || "New Notification";
   const notificationOptions = {
     body: payload.notification?.body || "You have a new message",
@@ -55,7 +49,6 @@ messaging.onBackgroundMessage((payload) => {
 
 // Notification click handler
 self.addEventListener("notificationclick", (event) => {
-  console.log("[SW] Notification click:", event.notification);
   event.notification.close();
 
   const urlToOpen = event.notification.data.url || "/";
@@ -80,19 +73,16 @@ self.addEventListener("notificationclick", (event) => {
 
 // Service Worker Lifecycle
 self.addEventListener("install", (event) => {
-  console.log("[SW] Installing service worker");
   event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activating service worker");
   event.waitUntil(clients.claim());
 });
 
 // Periodic sync for background updates (optional)
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "update-notifications") {
-    console.log("[SW] Periodic sync for notifications");
     event.waitUntil(handlePeriodicSync());
   }
 });

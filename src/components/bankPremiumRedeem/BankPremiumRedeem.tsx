@@ -40,13 +40,22 @@ const BankPremiumRedeem: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       try {
-        const premiums: any[] = await getBankPremiumsWithStats();
-        console.log("bank premeeee", premiums);
-        const rows: BankPremiumRow[] = premiums.map((p) => ({
+        // 👇 renamed `currentPage` from backend response to `serverCurrentPage`
+        const {
+          data,
+          totalCount,
+          totalPages,
+          currentPage: serverCurrentPage,
+        } = await getBankPremiumsWithStats(currentPage, pageSize);
+
+        const rows: BankPremiumRow[] = data.map((p: any) => ({
           id: p.code,
           title: p.title,
           code: p.code,
@@ -59,7 +68,15 @@ const BankPremiumRedeem: React.FC = () => {
           userParish: p.user?.parish || "-",
           totalRedemptions: p.stats?.totalRedemptions || 0,
         }));
+
         setBankPremiums(rows);
+        setTotalPages(totalPages);
+        setTotalItems(totalCount);
+
+        // optional: sync current page with backend if needed
+        if (serverCurrentPage !== currentPage) {
+          setCurrentPage(serverCurrentPage);
+        }
       } catch (err: any) {
         setError(err);
         toast.error(err.message || "Failed to fetch bank premiums.");
@@ -69,29 +86,7 @@ const BankPremiumRedeem: React.FC = () => {
     };
 
     loadData();
-  }, []);
-
-  const filteredData = bankPremiums.filter((item) => {
-    if (!searchTerm.trim()) return true;
-
-    // Exact code match filter if search looks like a code
-    if (/^[A-Z0-9]+$/i.test(searchTerm.trim())) {
-      return item.code.toLowerCase() === searchTerm.trim().toLowerCase();
-    }
-
-    // Otherwise, normal partial search
-    return (
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.userName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  }, [currentPage, pageSize]);
 
   const columns: Column<BankPremiumRow>[] = [
     {
@@ -162,7 +157,7 @@ const BankPremiumRedeem: React.FC = () => {
         style={{
           position: "fixed",
           top: 0,
-          left: 0,
+          left: 100,
           width: "100vw",
           height: "100vh",
           backgroundColor: "rgba(255,255,255,0.6)",
@@ -216,7 +211,7 @@ const BankPremiumRedeem: React.FC = () => {
       <div style={{ width: "100%", overflowX: "auto" }}>
         <TableContainer
           columns={columns}
-          data={paginatedData}
+          data={bankPremiums}
           isPagination={true}
           iscustomPageSize={true}
           pagination={{

@@ -4,7 +4,7 @@ import { API_URL } from "./brandService";
 export interface IBankPremium {
   _id: string;
   title: string;
-
+  qty: string;
   description: string;
   points_required: string;
   start_date: string;
@@ -126,12 +126,13 @@ export const updateRedemptionStatus = async (
   }
 };
 
-export const getBankPremiumsWithStats = async (): Promise<
-  BankPremiumWithLeaderboard[]
-> => {
+export const getBankPremiumsWithStats = async (
+  page: number = 1,
+  limit: number = 10
+): Promise<any> => {
   try {
     const response = await axios.get(
-      `${API_URL}/get-all-bank-premiums-redeemed`,
+      `${API_URL}/get-all-bank-premiums-redeemed?page=${page}&limit=${limit}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -139,20 +140,7 @@ export const getBankPremiumsWithStats = async (): Promise<
       }
     );
 
-    // Access the correct property
-    const bankPremiums: IBankPremium[] = response.data.data;
-
-    if (!Array.isArray(bankPremiums)) {
-      console.warn("bankPremiums is not an array:", bankPremiums);
-      return [];
-    }
-
-    // Transform data to include counts
-    return bankPremiums.map((premium) => ({
-      ...premium,
-      enrolled_users_count: premium.enrolled_users?.length || 0,
-      redemption_count: (premium as any).stats?.totalRedemptions || 0,
-    }));
+    return response.data.data;
   } catch (error: any) {
     console.error("Error fetching bank premiums:", error);
     throw new Error("Failed to fetch bank premiums");

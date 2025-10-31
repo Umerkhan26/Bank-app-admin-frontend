@@ -42,8 +42,6 @@ const Qrcode: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [usedCount, setUsedCount] = useState(0);
-  const [unusedCount, setUnusedCount] = useState(0);
 
   const [formData, setFormData] = useState<QRCode>({
     code: "",
@@ -88,8 +86,6 @@ const Qrcode: React.FC = () => {
           setQrCodes(qrCodeData.qrCodes);
           setTotalPages(qrCodeData.totalPages);
           setTotalCount(qrCodeData.totalCount);
-          setUsedCount(qrCodeData.usedCount);
-          setUnusedCount(qrCodeData.unusedCount);
           setCurrentPage(qrCodeData.currentPage);
         } else {
           toast.error("No QR codes available.");
@@ -154,8 +150,6 @@ const Qrcode: React.FC = () => {
         setQrCodes(qrCodeData.qrCodes);
         setTotalPages(qrCodeData.totalPages);
         setTotalCount(qrCodeData.totalCount);
-        setUsedCount(qrCodeData.usedCount);
-        setUnusedCount(qrCodeData.unusedCount);
       }
 
       setFormData({
@@ -199,8 +193,6 @@ const Qrcode: React.FC = () => {
       setQrCodes(qrCodeData.qrCodes);
       setTotalPages(qrCodeData.totalPages);
       setTotalCount(qrCodeData.totalCount);
-      setUsedCount(qrCodeData.usedCount);
-      setUnusedCount(qrCodeData.unusedCount);
     } catch {
       toast.error("Error deleting QR Code.");
     }
@@ -279,8 +271,6 @@ const Qrcode: React.FC = () => {
         setQrCodes(qrCodeData.qrCodes);
         setTotalPages(qrCodeData.totalPages);
         setTotalCount(qrCodeData.totalCount);
-        setUsedCount(qrCodeData.usedCount);
-        setUnusedCount(qrCodeData.unusedCount);
       }
     } catch (error) {
       toast.error("Error refreshing QR codes.");
@@ -370,7 +360,7 @@ const Qrcode: React.FC = () => {
         style={{
           position: "fixed",
           top: 0,
-          left: 0,
+          left: 100,
           width: "100vw",
           height: "100vh",
           backgroundColor: "rgba(255,255,255,0.6)",
@@ -436,10 +426,7 @@ const Qrcode: React.FC = () => {
               borderRadius: "5px",
               display: "inline-block",
             }}
-          >
-            Total QR Codes: {totalCount} | Used: {usedCount} | Unused:{" "}
-            {unusedCount}
-          </div>
+          ></div>
           <Modal show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton>
               <Modal.Title style={{ color: "#1a8797" }}>

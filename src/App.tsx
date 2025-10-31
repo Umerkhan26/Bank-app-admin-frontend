@@ -50,7 +50,6 @@ axios.interceptors.response.use(
 function App() {
   useEffect(() => {
     const unsubscribePromise = onForegroundMessage((payload) => {
-      console.log("Foreground message received:", payload);
       toast.info(
         <div>
           <h5>{payload.notification?.title}</h5>

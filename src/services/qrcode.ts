@@ -45,7 +45,6 @@ export const getqrcodeData = async (
     const response = await axios.get(`${API_URL}/getqrCode`, {
       params: { page, limit, search }, // ✅ include search
     });
-    console.log("response from get qr code api", response);
     return response.data;
   } catch (error) {
     console.error("Error fetching QR code data:", error);
@@ -64,7 +63,6 @@ export const updateQRCodeData = async (
 ): Promise<any> => {
   try {
     const token = localStorage.getItem("token");
-    console.log("Token used for request:", token);
     if (!token) {
       throw new Error("No authentication token found");
     }
@@ -125,7 +123,6 @@ export const bulkUploadQRCodes = async (file: File) => {
         "Content-Type": "multipart/form-data",
       },
     });
-    console.log("response from qr code csv ", response);
     return response.data;
   } catch (error: any) {
     console.error("Error uploading QR codes:", error);
@@ -185,12 +182,9 @@ export const listenToUploadProgress = (
     if (onClose) onClose();
   };
 
-  eventSource.onopen = () => {
-    console.log("SSE connection opened");
-  };
+  eventSource.onopen = () => {};
 
   return () => {
     eventSource.close();
-    console.log("SSE connection closed");
   };
 };
