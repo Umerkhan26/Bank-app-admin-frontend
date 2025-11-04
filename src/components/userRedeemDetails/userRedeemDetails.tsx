@@ -193,7 +193,6 @@ const UserRedeemDetails: React.FC = () => {
           left: 100,
           width: "100vw",
           height: "100vh",
-          backgroundColor: "rgba(255, 255, 255, 0.6)",
           zIndex: 9999,
           display: "flex",
           justifyContent: "center",

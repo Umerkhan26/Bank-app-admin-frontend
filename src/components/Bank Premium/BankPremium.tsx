@@ -237,7 +237,7 @@ const BankPremium: React.FC = () => {
       },
       {
         Header: "Title",
-        accessor: "title", // ✅ no need for `as keyof`
+        accessor: "title",
         Cell: ({ value }: CellProps<IBankPremium, IBankPremium["title"]>) => (
           <div
             style={{ minHeight: "40px", display: "flex", alignItems: "center" }}
@@ -358,7 +358,6 @@ const BankPremium: React.FC = () => {
           left: 100,
           width: "100vw",
           height: "100vh",
-          backgroundColor: "rgba(255, 255, 255, 0.6)",
           zIndex: 9999,
           display: "flex",
           justifyContent: "center",
