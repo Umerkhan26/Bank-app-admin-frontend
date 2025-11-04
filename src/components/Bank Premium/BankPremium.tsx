@@ -233,7 +233,7 @@ const BankPremium: React.FC = () => {
         Header: "#",
         id: "rowNumber",
         Cell: ({ row }: CellProps<IBankPremium, number>) => row.index + 1,
-        width: 40,
+        width: 30,
       },
       {
         Header: "Title",
@@ -245,7 +245,7 @@ const BankPremium: React.FC = () => {
             {value}
           </div>
         ),
-        width: 100,
+        width: 110,
       },
       {
         Header: "Description",
@@ -254,7 +254,7 @@ const BankPremium: React.FC = () => {
           value,
         }: CellProps<IBankPremium, IBankPremium["description"]>) =>
           value || "—",
-        width: 130,
+        width: 110,
       },
       {
         Header: "Points Required",
@@ -263,7 +263,7 @@ const BankPremium: React.FC = () => {
           value,
         }: CellProps<IBankPremium, IBankPremium["points_required"]>) =>
           value || "—",
-        width: 110,
+        width: 60,
       },
       {
         Header: "Start Date",
@@ -319,14 +319,14 @@ const BankPremium: React.FC = () => {
         accessor: "qty",
         Cell: ({ value }: CellProps<IBankPremium, IBankPremium["qty"]>) =>
           value !== null && value !== undefined ? value : "—",
-        width: 80,
+        width: 60,
       },
 
       {
         Header: "Actions",
         id: "actions",
         Cell: ({ row }: CellProps<IBankPremium, unknown>) => (
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "7px" }}>
             <Button
               variant="secondary"
               size="sm"
