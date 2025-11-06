@@ -325,7 +325,7 @@ const Store: React.FC = () => {
     {
       Header: "Telephone",
       accessor: "telephoneNumber",
-      width: 100,
+      width: 90,
     },
     {
       Header: "Latitude",
@@ -340,7 +340,7 @@ const Store: React.FC = () => {
     {
       Header: "Active",
       accessor: (row) => (row.isActive ? "Yes" : "No"),
-      width: 40,
+      width: 50,
     },
     {
       Header: "Actions",
@@ -354,7 +354,7 @@ const Store: React.FC = () => {
             disabled={isDeleting}
           >
             {isDeleting && deletingId === row.original._id ? (
-              <ClipLoader size={15} color="#fff" />
+              <ClipLoader size={14} color="#fff" />
             ) : (
               "Delete"
             )}
