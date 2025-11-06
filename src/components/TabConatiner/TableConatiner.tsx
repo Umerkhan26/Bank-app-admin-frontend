@@ -219,7 +219,7 @@ const TableContainer = <T extends object>({
                     <th
                       key={enhancedColumn.id}
                       style={{
-                        fontSize: "0.725rem",
+                        fontSize: "0.690rem",
                         fontWeight: "bold",
                         padding: "8px",
                         width: enhancedColumn.width || "auto",
@@ -254,7 +254,7 @@ const TableContainer = <T extends object>({
                       style={{
                         padding: "0.4rem 0.4rem",
                         whiteSpace: "nowrap",
-                        fontSize: "0.825rem",
+                        fontSize: "0.690rem",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                       }}
@@ -358,7 +358,7 @@ const TableContainer = <T extends object>({
           </Col>
 
           <Col md={3} className="text-md-end">
-            <span style={{ fontSize: "14px", fontWeight: "500" }}>
+            <span style={{ fontSize: "12px", fontWeight: "400" }}>
               {pagination.totalItems
                 ? `Total: ${pagination.totalItems} items`
                 : ""}
@@ -377,7 +377,7 @@ const TableContainer = <T extends object>({
           )} */}
 
           <Col md={3} className="text-md-end">
-            <div style={{ fontSize: "14px", fontWeight: "500 " }}>
+            <div style={{ fontSize: "12px", fontWeight: "400 " }}>
               {footerText && <span>{footerText}</span>}
             </div>
           </Col>

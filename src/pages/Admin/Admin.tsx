@@ -33,9 +33,10 @@ import {
   MdCampaign,
   MdOutlineArrowDropDown,
 } from "react-icons/md";
-import { FaLocationDot, FaQrcode } from "react-icons/fa6";
+import { FaFileInvoiceDollar, FaLocationDot, FaQrcode } from "react-icons/fa6";
+import { RiBankLine } from "react-icons/ri";
 import { IoNotifications } from "react-icons/io5";
-import { FaUsers } from "react-icons/fa";
+import { FaRegListAlt, FaUsers } from "react-icons/fa";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { checkAuth, logout } from "../../utils/authUtils";
 import logo from "../../assets/BANKS CURVED LOGO-09.png";
@@ -101,7 +102,7 @@ const Admin: React.FC = () => {
               <SidebarItem>
                 <SidebarLink to="/usersRedeemDetails">
                   <SidebarIcon>
-                    <FaUsers />
+                    <FaRegListAlt />
                   </SidebarIcon>
                   <SidebarText>User Redeem Details</SidebarText>
                 </SidebarLink>
@@ -160,11 +161,10 @@ const Admin: React.FC = () => {
                 </SidebarLink>
               </SidebarItem>
 
-              {/* Additional items to demonstrate scroll */}
               <SidebarItem>
                 <SidebarLink to="/bank-premium">
                   <SidebarIcon>
-                    <AiOutlineDashboard />
+                    <RiBankLine />
                   </SidebarIcon>
                   <SidebarText>Bank Premium</SidebarText>
                 </SidebarLink>
@@ -172,7 +172,7 @@ const Admin: React.FC = () => {
               <SidebarItem>
                 <SidebarLink to="/bank-premium-redeem-details">
                   <SidebarIcon>
-                    <AiOutlineDashboard />
+                    <FaFileInvoiceDollar />
                   </SidebarIcon>
                   <SidebarText>Bank Premium Redeem Details</SidebarText>
                 </SidebarLink>
