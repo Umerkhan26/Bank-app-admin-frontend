@@ -339,12 +339,24 @@ const Qrcode: React.FC = () => {
           <button
             className="btn btn-danger"
             onClick={() => handleDeleteqrcode(row.original)}
+            style={{
+              padding: "6px 8px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
           >
             Delete
           </button>
           <button
             className="btn btn-secondary"
             onClick={() => handleEditQRCode(row.original)}
+            style={{
+              padding: "6px 8px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
           >
             Edit
           </button>

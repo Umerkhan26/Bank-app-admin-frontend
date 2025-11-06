@@ -14,6 +14,8 @@ import SendNotification from "../components/SendNotification/SendNotification";
 import UserRedeemDetails from "../components/userRedeemDetails/userRedeemDetails";
 import BankPremiumRedeem from "../components/bankPremiumRedeem/BankPremiumRedeem";
 import BankOffer from "../components/BankOffer/BankOffer";
+import AdditionalItems from "../components/AdditionalItems/AdditionalItems";
+import AdditionalItemsLeaderboard from "../components/AdditionalItemsDetails/AdditionalItemsLeaderboard";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -40,6 +42,11 @@ const AppRoutes: React.FC = () => {
           <Route path="notifications" element={<SendNotification />} />
           <Route path="bank-premium" element={<BankPremium />} />
           <Route path="qrcodes" element={<Qrcode />} />
+          <Route path="additional-items" element={<AdditionalItems />} />
+          <Route
+            path="additional-items-leaderboard"
+            element={<AdditionalItemsLeaderboard />}
+          />
         </Route>
       </Route>
 

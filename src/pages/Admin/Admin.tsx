@@ -33,9 +33,16 @@ import {
   MdCampaign,
   MdOutlineArrowDropDown,
 } from "react-icons/md";
-import { FaLocationDot, FaQrcode } from "react-icons/fa6";
+import { RiBankLine } from "react-icons/ri";
+import {
+  FaFileInvoiceDollar,
+  FaGift,
+  FaLocationDot,
+  FaQrcode,
+  FaReceipt,
+} from "react-icons/fa6";
 import { IoNotifications } from "react-icons/io5";
-import { FaUsers } from "react-icons/fa";
+import { FaRegListAlt, FaUsers } from "react-icons/fa";
 import { AiOutlineDashboard } from "react-icons/ai";
 import { checkAuth, logout } from "../../utils/authUtils";
 import logo from "../../assets/BANKS CURVED LOGO-09.png";
@@ -101,7 +108,7 @@ const Admin: React.FC = () => {
               <SidebarItem>
                 <SidebarLink to="/usersRedeemDetails">
                   <SidebarIcon>
-                    <FaUsers />
+                    <FaRegListAlt />
                   </SidebarIcon>
                   <SidebarText>User Redeem Details</SidebarText>
                 </SidebarLink>
@@ -160,7 +167,6 @@ const Admin: React.FC = () => {
                 </SidebarLink>
               </SidebarItem>
 
-              {/* Additional items to demonstrate scroll */}
               <SidebarItem>
                 <SidebarLink to="/bank-premium">
                   <SidebarIcon>
@@ -172,16 +178,34 @@ const Admin: React.FC = () => {
               <SidebarItem>
                 <SidebarLink to="/bank-premium-redeem-details">
                   <SidebarIcon>
-                    <AiOutlineDashboard />
+                    <FaFileInvoiceDollar />
                   </SidebarIcon>
                   <SidebarText>Bank Premium Redeem Details</SidebarText>
                 </SidebarLink>
               </SidebarItem>
 
               <SidebarItem>
+                <SidebarLink to="/additional-items">
+                  <SidebarIcon>
+                    <FaGift />
+                  </SidebarIcon>
+                  <SidebarText>Additional Items</SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              <SidebarItem>
+                <SidebarLink to="/additional-items-leaderboard">
+                  <SidebarIcon>
+                    <FaReceipt />
+                  </SidebarIcon>
+                  <SidebarText>Additional Items Radeem Details </SidebarText>
+                </SidebarLink>
+              </SidebarItem>
+
+              <SidebarItem>
                 <SidebarLink to="/bank-offer">
                   <SidebarIcon>
-                    <AiOutlineDashboard />
+                    <RiBankLine />
                   </SidebarIcon>
                   <SidebarText>Bank Offer</SidebarText>
                 </SidebarLink>

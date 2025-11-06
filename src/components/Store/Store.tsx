@@ -352,6 +352,12 @@ const Store: React.FC = () => {
             onClick={() => handleDeleteStore(row.original)}
             className="btn btn-danger"
             disabled={isDeleting}
+            style={{
+              padding: "6px 8px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
           >
             {isDeleting && deletingId === row.original._id ? (
               <ClipLoader size={14} color="#fff" />
@@ -363,6 +369,12 @@ const Store: React.FC = () => {
             onClick={() => handleEditStore(row.original)}
             className="btn btn-secondary"
             disabled={isDeleting || isSaving}
+            style={{
+              padding: "6px 8px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
           >
             Edit
           </button>

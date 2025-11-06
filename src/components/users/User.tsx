@@ -261,7 +261,7 @@ const User: React.FC = () => {
                   onClick={() => handleDeleteUser(row.original)}
                   className="btn btn-danger ms-2"
                   style={{
-                    padding: "7px 10px",
+                    padding: "6px 8px",
                     border: "none",
                     borderRadius: "5px",
                     cursor: "pointer",

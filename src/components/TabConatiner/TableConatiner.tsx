@@ -219,7 +219,7 @@ const TableContainer = <T extends object>({
                     <th
                       key={enhancedColumn.id}
                       style={{
-                        fontSize: "0.725rem",
+                        fontSize: "0.690rem",
                         fontWeight: "bold",
                         padding: "8px",
                         width: enhancedColumn.width || "auto",
@@ -254,7 +254,7 @@ const TableContainer = <T extends object>({
                       style={{
                         padding: "0.4rem 0.4rem",
                         whiteSpace: "nowrap",
-                        fontSize: "0.825rem",
+                        fontSize: "0.690rem",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                       }}
