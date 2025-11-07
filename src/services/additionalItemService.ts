@@ -1,6 +1,11 @@
 import axios from "axios";
 import { API_URL } from "./brandService";
 
+export interface IBrand {
+  id?: string;
+  brandName?: string;
+}
+
 export interface IAdditionalItem {
   _id: string;
   title: string;
@@ -11,7 +16,7 @@ export interface IAdditionalItem {
   image_url: string;
   active: boolean;
   enrolled_users: string[];
-  brand?: string;
+  brand?: string | IBrand;
   qty?: number;
   redemptions: any[];
   createdAt?: string;
@@ -27,14 +32,45 @@ export interface LeaderboardUser {
   lastRedeemedAt: string;
 }
 
-export const getAllAdditionalItems = async (): Promise<IAdditionalItem[]> => {
+export interface FetchAdditionalItemsResponse {
+  data: IAdditionalItem[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+export const getAllAdditionalItems = async (
+  page = 1,
+  limit = 10,
+  search = "",
+  sortBy = "createdAt",
+  sortOrder: "asc" | "desc" = "desc"
+): Promise<FetchAdditionalItemsResponse> => {
   try {
-    const response = await axios.get(`${API_URL}/getAllAdditionalItems`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sortBy,
+      sortOrder,
     });
-    return response.data.data;
+
+    // optional search filter
+    if (search.trim()) params.append("search", search.trim());
+
+    const response = await axios.get(
+      `${API_URL}/getAllAdditionalItems?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    return {
+      data: response.data.data || [],
+      totalCount: response.data.totalCount || 0,
+      totalPages: response.data.totalPages || 1,
+      currentPage: response.data.currentPage || 1,
+    };
   } catch (error: any) {
     console.error("Error fetching additional items:", error);
     throw new Error(
@@ -43,7 +79,6 @@ export const getAllAdditionalItems = async (): Promise<IAdditionalItem[]> => {
   }
 };
 
-// Create additional item
 export const createAdditionalItem = async (
   formData: FormData
 ): Promise<{ data: IAdditionalItem }> => {
@@ -108,16 +143,25 @@ export interface AdditionalItemWithLeaderboard extends IAdditionalItem {
   totalItemRedeems: number;
 }
 
-export const fetchAdditionalItemsWithLeaderboard = async (): Promise<
-  AdditionalItemWithLeaderboard[]
-> => {
+export const fetchAdditionalItemsWithLeaderboard = async (
+  page = 1,
+  limit = 10,
+  search = ""
+): Promise<{
+  data: AdditionalItemWithLeaderboard[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}> => {
   try {
     const response = await axios.get(`${API_URL}/additional-items-leadboard`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
+      params: { page, limit, search },
     });
-    return response.data;
+
+    return response.data; // ✅ Matches your backend structure
   } catch (error: any) {
     console.error("Error fetching additional items leaderboard:", error);
     throw new Error(

@@ -34,11 +34,18 @@ const AdditionalItems: React.FC = () => {
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    totalCount: 0,
+    totalPages: 1,
+    currentPage: 1,
+  });
+  const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [itemForm, setItemForm] = useState<{
     title: string;
     description: string;
@@ -62,13 +69,33 @@ const AdditionalItems: React.FC = () => {
   });
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      // Only show spinner for first load, not every search keystroke
+      if (additionalItems.length === 0) setLoading(true);
       try {
-        const itemsData = await getAllAdditionalItems();
+        const itemsResponse = await getAllAdditionalItems(
+          currentPage,
+          pageSize,
+          debouncedSearch,
+          "createdAt",
+          sortOrder
+        );
         const brandData = await getAllBrands();
-        setAdditionalItems(itemsData);
+
+        setAdditionalItems(itemsResponse.data);
         setBrands(brandData);
+        setPagination({
+          totalCount: itemsResponse.totalCount,
+          totalPages: itemsResponse.totalPages,
+          currentPage: itemsResponse.currentPage,
+        });
       } catch (error: any) {
         toast.error(error.message || "Failed to fetch data");
       } finally {
@@ -77,7 +104,7 @@ const AdditionalItems: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [currentPage, pageSize, debouncedSearch, sortOrder]);
 
   const resetForm = () => {
     setItemForm({
@@ -147,7 +174,11 @@ const AdditionalItems: React.FC = () => {
       }
 
       if (itemForm.brand) {
-        formData.append("brand", itemForm.brand);
+        const brandValue =
+          typeof itemForm.brand === "object"
+            ? itemForm.brand._id
+            : itemForm.brand;
+        formData.append("brand", brandValue);
       }
 
       if (itemForm.qty) {
@@ -189,11 +220,11 @@ const AdditionalItems: React.FC = () => {
       title: item.title,
       description: item.description,
       points_required: item.points_required,
-      start_date: item.start_date.split("T")[0], // Format date for input
-      end_date: item.end_date.split("T")[0], // Format date for input
+      start_date: item.start_date.split("T")[0],
+      end_date: item.end_date.split("T")[0],
       image: null,
       active: item.active,
-      brand: item.brand || "",
+      brand: typeof item.brand === "object" ? item.brand._id : item.brand || "",
       qty: item.qty?.toString() || "",
     });
     setShowModal(true);
@@ -224,23 +255,6 @@ const AdditionalItems: React.FC = () => {
     }
   };
 
-  const filteredAdditionalItems = additionalItems.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      brands
-        ?.find((b) => b._id === item.brand)
-        ?.brandName.toLowerCase()
-        ?.includes(searchTerm.toLowerCase())
-  );
-
-  const totalItems = filteredAdditionalItems.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedAdditionalItems = filteredAdditionalItems.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   const columns: Column<IAdditionalItem>[] = React.useMemo(
     () => [
       {
@@ -255,11 +269,7 @@ const AdditionalItems: React.FC = () => {
         Cell: ({
           value,
         }: CellProps<IAdditionalItem, IAdditionalItem["title"]>) => (
-          <div
-            style={{ minHeight: "40px", display: "flex", alignItems: "center" }}
-          >
-            {value}
-          </div>
+          <div style={{ display: "flex", alignItems: "center" }}>{value}</div>
         ),
         width: 110,
       },
@@ -419,8 +429,13 @@ const AdditionalItems: React.FC = () => {
           <SearchInput
             type="text"
             placeholder="Search additional items..."
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
           />
+
           <AddUserButton
             onClick={() => {
               setIsEditMode(false);
@@ -587,24 +602,19 @@ const AdditionalItems: React.FC = () => {
         </Modal>
       </HeaderSection>
       <TableContainer<IAdditionalItem>
-        key={additionalItems.length}
         columns={columns}
-        data={paginatedAdditionalItems}
+        data={additionalItems}
         isPagination={true}
         iscustomPageSize={true}
         pagination={{
-          currentPage,
-          totalPages,
-          totalItems,
+          currentPage: pagination.currentPage,
+          totalPages: pagination.totalPages,
+          totalItems: pagination.totalCount,
           pageSize,
         }}
         onPageChange={setCurrentPage}
         onPageSizeChange={setPageSize}
         showHeaderFilters={false}
-        tableStyle={{
-          width: "100%",
-          tableLayout: "fixed",
-        }}
       />
     </Container>
   );
