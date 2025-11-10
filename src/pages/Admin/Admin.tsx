@@ -170,7 +170,7 @@ const Admin: React.FC = () => {
               <SidebarItem>
                 <SidebarLink to="/bank-premium">
                   <SidebarIcon>
-                    <AiOutlineDashboard />
+                    <RiBankLine />
                   </SidebarIcon>
                   <SidebarText>Bank Premium</SidebarText>
                 </SidebarLink>
