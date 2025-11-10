@@ -115,6 +115,7 @@ const BankPremium: React.FC = () => {
   };
 
   const saveBankPremium = async () => {
+    setLoading(true);
     try {
       if (premiumForm.start_date && premiumForm.end_date) {
         if (new Date(premiumForm.end_date) < new Date(premiumForm.start_date)) {
@@ -165,6 +166,8 @@ const BankPremium: React.FC = () => {
           `Failed to ${isEditMode ? "update" : "add"} bank premium`
       );
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 

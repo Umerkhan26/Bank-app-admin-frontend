@@ -45,7 +45,7 @@ const AdditionalItems: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortOrder] = useState<"asc" | "desc">("desc");
   const [itemForm, setItemForm] = useState<{
     title: string;
     description: string;
@@ -54,7 +54,7 @@ const AdditionalItems: React.FC = () => {
     end_date: string;
     image: File | null;
     active: boolean;
-    brand: string;
+    brand: string | { _id: string; brandName: string };
     qty: string;
   }>({
     title: "",
@@ -77,8 +77,6 @@ const AdditionalItems: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Only show spinner for first load, not every search keystroke
-      if (additionalItems.length === 0) setLoading(true);
       try {
         const itemsResponse = await getAllAdditionalItems(
           currentPage,
@@ -87,9 +85,14 @@ const AdditionalItems: React.FC = () => {
           "createdAt",
           sortOrder
         );
+
+        console.log("itemsResponse ===>", itemsResponse);
+        console.log("itemsResponse.data ===>", itemsResponse.data);
+
         const brandData = await getAllBrands();
 
         setAdditionalItems(itemsResponse.data);
+
         setBrands(brandData);
         setPagination({
           totalCount: itemsResponse.totalCount,
@@ -142,6 +145,7 @@ const AdditionalItems: React.FC = () => {
   };
 
   const saveAdditionalItem = async () => {
+    setLoading(true);
     try {
       // Validation
       if (!itemForm.title.trim()) {
@@ -210,6 +214,8 @@ const AdditionalItems: React.FC = () => {
           `Failed to ${isEditMode ? "update" : "add"} additional item`
       );
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -546,7 +552,11 @@ const AdditionalItems: React.FC = () => {
                 <Form.Label>Brand</Form.Label>
                 <Form.Select
                   name="brand"
-                  value={itemForm.brand}
+                  value={
+                    typeof itemForm.brand === "object"
+                      ? itemForm.brand._id
+                      : itemForm.brand
+                  }
                   onChange={handleChange}
                 >
                   <option value="">Select a brand</option>

@@ -387,7 +387,6 @@ import { Column, Row } from "react-table";
 import {
   fetchAdditionalItemsWithLeaderboard,
   AdditionalItemWithLeaderboard,
-  GetLeaderboardOptions,
 } from "../../services/additionalItemService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
@@ -400,7 +399,6 @@ import {
 import TableContainer from "../TabConatiner/TableConatiner";
 import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
-import { debounce } from "lodash";
 
 interface LeaderboardRow {
   itemTitle: string;
@@ -426,6 +424,7 @@ const AdditionalItemsLeaderboard: React.FC = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalRedeemCount, setTotalRedeemCount] = useState(0);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
   const loadData = useCallback(
     async (page: number, limit: number, search: string = "") => {
@@ -433,18 +432,19 @@ const AdditionalItemsLeaderboard: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const options: GetLeaderboardOptions = {
+        const response = await fetchAdditionalItemsWithLeaderboard(
           page,
           limit,
-          search: search || undefined,
-        };
+          search
+        );
 
-        const response = await fetchAdditionalItemsWithLeaderboard(options);
         console.log(" ddd", response);
 
         const rows: LeaderboardRow[] = [];
 
-        response.data.forEach((item: AdditionalItemWithLeaderboard) => {
+        const itemsArray = response.data || [];
+
+        itemsArray.forEach((item: AdditionalItemWithLeaderboard) => {
           const brandName =
             typeof item.brand === "string"
               ? item.brand
@@ -460,7 +460,9 @@ const AdditionalItemsLeaderboard: React.FC = () => {
 
           if (Array.isArray(item.leaderboard) && item.leaderboard.length > 0) {
             item.leaderboard.forEach((user) => {
-              const totalRedeems = user.totalRedeems || 0;
+              const totalRedeems =
+                user.totalRedeemCount || user.userRedeemCount || 0;
+
               if (totalRedeems > 0) {
                 const lastRedeemedAt = user.lastRedeemedAt
                   ? new Date(user.lastRedeemedAt).toLocaleString()
@@ -502,8 +504,9 @@ const AdditionalItemsLeaderboard: React.FC = () => {
         );
 
         setLeaderboardData(rows);
-        setTotalItems(response.totalCount);
-        setTotalPages(response.totalPages);
+        setTotalItems(response.totalCount || 0);
+        setTotalPages(response.totalPages || 0);
+
         setTotalRedeemCount(redeemCount);
       } catch (err) {
         setError(err as Error);
@@ -515,31 +518,20 @@ const AdditionalItemsLeaderboard: React.FC = () => {
     []
   );
 
-  // Debounced search
-  const debouncedSearch = useMemo(
-    () =>
-      debounce((search: string) => {
-        setCurrentPage(1);
-        loadData(1, pageSize, search);
-      }, 500),
-    [loadData, pageSize]
-  );
-
   useEffect(() => {
-    loadData(currentPage, pageSize);
-  }, [loadData, currentPage, pageSize]);
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
 
-  useEffect(() => {
-    if (searchTerm !== undefined) {
-      debouncedSearch(searchTerm);
-    }
-  }, [searchTerm, debouncedSearch]);
-
-  useEffect(() => {
+    // Cleanup function
     return () => {
-      debouncedSearch.cancel();
+      clearTimeout(handler);
     };
-  }, [debouncedSearch]);
+  }, [searchTerm]);
+  useEffect(() => {
+    loadData(currentPage, pageSize, debouncedSearchTerm);
+  }, [loadData, currentPage, pageSize, debouncedSearchTerm]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -760,44 +752,51 @@ const AdditionalItemsLeaderboard: React.FC = () => {
         </div>
       </HeaderSection>
 
-      {leaderboardData.length === 0 && !loading ? (
+      {/* Show error or no data message above the table */}
+      {(error || leaderboardData.length === 0) && !loading && (
         <div
           style={{
             textAlign: "center",
-            padding: "3rem",
-            color: "#6b7280",
-            fontSize: "14px",
+            padding: "1.5rem",
+            color: error ? "red" : "#6b7280",
+            fontSize: "13px",
           }}
         >
-          {searchTerm
+          {error
+            ? `Error loading data: ${(error as Error).message}`
+            : searchTerm
             ? "No results found for your search."
             : "No redemption data available for additional items."}
         </div>
-      ) : (
-        <div style={{ width: "100%", overflowX: "auto" }}>
-          <TableContainer
-            columns={columns}
-            data={leaderboardData}
-            isPagination={true}
-            iscustomPageSize={true}
-            pagination={{
-              currentPage,
-              totalPages,
-              totalItems,
-              pageSize,
-            }}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            showHeaderFilters={false}
-            rowProps={(row: Row<LeaderboardRow>) => ({
-              style: {
-                backgroundColor: row.index % 2 === 0 ? "#f9f9f9" : "white",
-              },
-            })}
-            footerText={`Total Additional Items Redeemed: ${totalRedeemCount} times`}
-          />
-        </div>
       )}
+
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <TableContainer
+          columns={columns}
+          data={leaderboardData}
+          isPagination={true}
+          iscustomPageSize={true}
+          pagination={{
+            currentPage,
+            totalPages,
+            totalItems,
+            pageSize,
+          }}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          showHeaderFilters={false}
+          rowProps={(row: Row<LeaderboardRow>) => ({
+            style: {
+              backgroundColor: row.index % 2 === 0 ? "#f9f9f9" : "white",
+            },
+          })}
+          footerText={
+            loading
+              ? "Loading data..."
+              : `Total Additional Items Redeemed: ${totalRedeemCount} times`
+          }
+        />
+      </div>
     </Container>
   );
 };

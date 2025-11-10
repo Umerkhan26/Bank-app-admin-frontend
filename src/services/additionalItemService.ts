@@ -2,7 +2,7 @@ import axios from "axios";
 import { API_URL } from "./brandService";
 
 export interface IBrand {
-  id?: string;
+  _id: string;
   brandName?: string;
 }
 
@@ -28,7 +28,8 @@ export interface LeaderboardUser {
   username: string;
   email: string;
   fullName: string;
-  totalRedeems: number;
+  totalRedeemCount: number;
+  userRedeemCount: number;
   lastRedeemedAt: string;
 }
 
@@ -53,7 +54,6 @@ export const getAllAdditionalItems = async (
       sortOrder,
     });
 
-    // optional search filter
     if (search.trim()) params.append("search", search.trim());
 
     const response = await axios.get(
@@ -65,11 +65,13 @@ export const getAllAdditionalItems = async (
       }
     );
 
+    const apiData = response.data.data;
+
     return {
-      data: response.data.data || [],
-      totalCount: response.data.totalCount || 0,
-      totalPages: response.data.totalPages || 1,
-      currentPage: response.data.currentPage || 1,
+      data: apiData.data || [],
+      totalCount: apiData.totalCount || 0,
+      totalPages: apiData.totalPages || 1,
+      currentPage: apiData.currentPage || 1,
     };
   } catch (error: any) {
     console.error("Error fetching additional items:", error);
@@ -140,7 +142,7 @@ export const deleteAdditionalItem = async (id: string): Promise<void> => {
 
 export interface AdditionalItemWithLeaderboard extends IAdditionalItem {
   leaderboard: LeaderboardUser[];
-  totalItemRedeems: number;
+  totalRedeemCount: number;
 }
 
 export const fetchAdditionalItemsWithLeaderboard = async (
