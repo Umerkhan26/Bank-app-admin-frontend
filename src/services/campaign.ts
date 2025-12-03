@@ -213,3 +213,36 @@ export const fetchCampaignsWithLeaderboard = async (): Promise<
     throw error;
   }
 };
+
+export const downloadCampaignRedeemsCSV = async (campaignId: string) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authorization token is missing");
+  }
+
+  try {
+    const response = await axios.get(
+      `${API_URL}/campaign/${campaignId}/redeems/export`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      }
+    );
+
+    const blob = new Blob([response.data], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `campaign_${campaignId}_redeems.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Error downloading CSV:", error);
+    throw error;
+  }
+};
